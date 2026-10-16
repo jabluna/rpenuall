@@ -950,18 +950,21 @@ export default function ProveedoresBodegaPage() {
 
   const filteredProducts = useMemo(() => {
     const cleanSearch = productSearch.trim().toLowerCase();
-
-    if (!cleanSearch) return products;
-
-    return products.filter((item) => {
-      return (
-        item.codigo.toLowerCase().includes(cleanSearch) ||
-        item.producto.toLowerCase().includes(cleanSearch) ||
-        normalizeText(item.unidadEmpaque).toLowerCase().includes(cleanSearch) ||
-        normalizeText(item.hojaDetalle).toLowerCase().includes(cleanSearch)
-      );
-    });
-  }, [products, productSearch]);
+    const visibles = bodegaSeleccionada === BODEGA_PRINCIPAL_ID
+      ? products
+      : products.filter(item => {
+          if (!selectedProvider) return false;
+          const clave = claveInsumo({ proveedorId: selectedProvider.codigoNodo, productoId: item.id });
+          return Object.prototype.hasOwnProperty.call(inventarioBodega, clave);
+        });
+    if (!cleanSearch) return visibles;
+    return visibles.filter(item =>
+      item.codigo.toLowerCase().includes(cleanSearch) ||
+      item.producto.toLowerCase().includes(cleanSearch) ||
+      normalizeText(item.unidadEmpaque).toLowerCase().includes(cleanSearch) ||
+      normalizeText(item.hojaDetalle).toLowerCase().includes(cleanSearch)
+    );
+  }, [products, productSearch, bodegaSeleccionada, inventarioBodega, selectedProvider]);
 
   const movementRows = useMemo(() => {
     return sortMovementRows(selectedProduct?.movimientosRaw);
@@ -3305,7 +3308,7 @@ export default function ProveedoresBodegaPage() {
                     No hay productos para mostrar
                   </h3>
                   <p className="text-sm text-slate-500 mt-2">
-                    Este proveedor todavía no tiene productos o cambia el filtro.
+                    {bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "Este proveedor todavía no tiene productos o cambia el filtro." : "Esta bodega aún no tiene productos registrados de este proveedor."}
                   </p>
                 </div>
               ) : (
