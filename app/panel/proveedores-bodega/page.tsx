@@ -1998,7 +1998,98 @@ export default function ProveedoresBodegaPage() {
     }
 
     if (operationType === "TRASLADO") {
-      setError("La validación del traslado está lista, pero el registro simultáneo en ambas bodegas requiere completar la transacción segura. No se modificó inventario.");
+      if (savingMovement) return;
+      const cantidad = Number(movementForm.SALIDA);
+      const lote = normalizeText(movementForm.OBSERVACIONES).trim().toUpperCase();
+      const fecha = normalizeDateInput(movementForm.FECHA);
+      const referencia = operationConsecutive.trim().toUpperCase();
+      if (editingMovementId || bodegaSeleccionada !== BODEGA_PRINCIPAL_ID) {
+        setError("Los traslados desde bodegas secundarias y la edición de traslados aún no están habilitados.");
+        return;
+      }
+      if (!bodegaDestino || bodegaDestino === BODEGA_PRINCIPAL_ID || !bodegasDisponibles.some(b => b.id === bodegaDestino)) {
+        setError("Selecciona una bodega destino activa distinta de la principal.");
+        return;
+      }
+      if (!fecha || !referencia || !lote || !Number.isFinite(cantidad) || cantidad <= 0 || !Number.isSafeInteger(cantidad)) {
+        setError("Indica fecha, referencia, lote y una cantidad entera positiva para trasladar.");
+        return;
+      }
+      if (toNumber(movementForm.INGRESO) > 0) {
+        setError("Un traslado solo admite salida en la bodega origen.");
+        return;
+      }
+      const loteElegido = lotOptions.find(x => x.lote === lote);
+      if (!loteElegido || cantidad > loteElegido.balance) {
+        setError("La cantidad supera el saldo del lote seleccionado.");
+        return;
+      }
+      setSavingMovement(true);
+      try {
+        const productPath = `PROVEEDORES/${selectedProvider.codigoNodo}/${selectedProvider.nombreNodo}/PRODUCTOS/${selectedProduct.id}`;
+        const key = claveInsumo({ proveedorId: selectedProvider.codigoNodo, productoId: selectedProduct.id });
+        const [origenSnap, destinoSnap, bodegaSnap] = await Promise.all([
+          get(ref(realtimeDb, productPath)),
+          get(ref(realtimeDb, `INVENTARIO_BODEGAS/${bodegaDestino}/${key}`)),
+          get(ref(realtimeDb, `BODEGAS/${bodegaDestino}`)),
+        ]);
+        if (!origenSnap.exists() || !bodegaSnap.exists() || bodegaSnap.val()?.eliminada || bodegaSnap.val()?.activa === false) {
+          throw new Error("El producto o la bodega destino ya no están disponibles.");
+        }
+        const origen = origenSnap.val() as { DATOS_PRODUCTO?: ProductData; MOVIMIENTOS?: Record<string, MovementData> };
+        const movimientos = origen.MOVIMIENTOS || {};
+        const saldo = getLatestProductStock({ DATOS_PRODUCTO: origen.DATOS_PRODUCTO || emptyProduct, MOVIMIENTOS: movimientos });
+        const loteActual = getLotsNewestFirst(movimientos).find(x => x.lote === lote);
+        const loteAntiguo = getOldestLotWithBalance(movimientos);
+        const disponibleOrigen = toNumber(saldo.stockReal) - toNumber(saldo.stockReservado);
+        if (!loteActual || cantidad > loteActual.balance || cantidad > disponibleOrigen || (loteAntiguo && loteAntiguo.lote !== lote)) {
+          throw new Error("Existencias insuficientes, reservadas o debes agotar primero el lote más antiguo.");
+        }
+        const destinoActual = (destinoSnap.val() || {}) as ExistenciaBodega & { lotes?: Record<string, number> };
+        const destinoFisico = Number(destinoActual.stockFisico || 0);
+        const destinoReservado = Number(destinoActual.reservado || 0);
+        if (!Number.isFinite(destinoFisico) || !Number.isFinite(destinoReservado) || destinoFisico < 0 || destinoReservado < 0 || destinoReservado > destinoFisico) {
+          throw new Error("La bodega destino presenta existencias inconsistentes.");
+        }
+        const ahora = Date.now();
+        const movimientoKey = nextMovementKey(movimientos);
+        const operacionId = `TRASLADO-${ahora}-${Math.random().toString(36).slice(2, 10)}`;
+        const nuevoSaldo = toNumber(saldo.stockReal) - cantidad;
+        const reserva = toNumber(saldo.stockReservado);
+        const disponible = nuevoSaldo - reserva;
+        const destinoPath = `INVENTARIO_BODEGAS/${bodegaDestino}/${key}`;
+        const updates: Record<string, unknown> = {
+          [`${productPath}/MOVIMIENTOS/${movimientoKey}`]: {
+            FECHA: fecha, DESCRIPCION: `TRASLADO-${referencia}`, OBSERVACIONES: lote,
+            INGRESO: "", SALIDA: cantidad, SALDO: nuevoSaldo,
+            STOCK_RESERVADO: reserva || "", STOCK_DISPONIBLE: disponible, STOCK_TEORICO: disponible,
+            ORDEN_FECHA: parseDateValue(fecha), CREATED_AT: ahora,
+            OPERACION_ID: operacionId, BODEGA_ORIGEN: BODEGA_PRINCIPAL_ID, BODEGA_DESTINO: bodegaDestino,
+          },
+          [`${productPath}/DATOS_PRODUCTO/STOCK`]: nuevoSaldo,
+          [`${destinoPath}/stockFisico`]: destinoFisico + cantidad,
+          [`${destinoPath}/reservado`]: destinoReservado,
+          [`${destinoPath}/actualizadoEn`]: ahora,
+          [`${destinoPath}/lotes/${lote}`]: Number(destinoActual.lotes?.[lote] || 0) + cantidad,
+          [`TRASLADOS_BODEGAS/${operacionId}`]: {
+            id: operacionId, referencia, fecha, creadoEn: ahora,
+            proveedorId: selectedProvider.codigoNodo, productoId: selectedProduct.id,
+            producto: selectedProduct.producto, lote, cantidad,
+            origen: BODEGA_PRINCIPAL_ID, destino: bodegaDestino, usuarioUid: authUser?.uid || "",
+          },
+        };
+        await update(ref(realtimeDb), updates);
+        setMessage(`Traslado registrado: ${cantidad} unidades del lote ${lote} enviadas a ${bodegaDestino}.`);
+        setOperationType("");
+        setOperationConsecutive("");
+        setBodegaDestino("");
+        setMovementForm(emptyMovement);
+        await loadProviders();
+      } catch (err: any) {
+        setError(`No se pudo realizar el traslado. ${err?.message || ""}`);
+      } finally {
+        setSavingMovement(false);
+      }
       return;
     }
     const ingreso = toNumber(movementForm.INGRESO);
