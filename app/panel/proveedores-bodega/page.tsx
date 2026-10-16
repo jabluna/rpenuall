@@ -2304,6 +2304,21 @@ export default function ProveedoresBodegaPage() {
         </header>
 
       <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-100 bg-white px-5 py-4 shadow-sm">
+          <div>
+            <p className="text-sm font-black text-slate-900">Administración de bodegas</p>
+            <p className="text-xs text-slate-500">Consulta, crea y administra las ubicaciones de inventario.</p>
+          </div>
+          <Link
+            href="/panel/bodegas"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#1d3d49]"
+          >
+            <Building2 size={18} />
+            Ver / crear bodegas
+            <ChevronRight size={16} />
+          </Link>
+        </div>
+
         {(error || message) && (
           <div className="mb-5">
 
