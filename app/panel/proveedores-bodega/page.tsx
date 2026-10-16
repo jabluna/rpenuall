@@ -970,13 +970,44 @@ export default function ProveedoresBodegaPage() {
     );
   }, [products, productSearch, bodegaSeleccionada, inventarioBodega, selectedProvider, traslados]);
 
-  const movementRows = useMemo(() => {
-    return sortMovementRows(selectedProduct?.movimientosRaw);
-  }, [selectedProduct]);
+  const movimientosBodega = useMemo(() => {
+    if (bodegaSeleccionada === BODEGA_PRINCIPAL_ID || !selectedProduct || !selectedProvider) return selectedProduct?.movimientosRaw || {};
+    const relevantes = Object.entries(traslados)
+      .filter(([,t]) => t.proveedorId === selectedProvider.codigoNodo && t.productoId === selectedProduct.id && (t.origen === bodegaSeleccionada || t.destino === bodegaSeleccionada))
+      .sort((a,b) => Number(a[1].creadoEn || 0) - Number(b[1].creadoEn || 0));
+    let saldo = 0;
+    const resultado: Record<string, MovementData> = {};
+    for (const [id,t] of relevantes) {
+      const ingreso = t.destino === bodegaSeleccionada && t.estado !== "pendiente_recepcion" ? Number(t.cantidad) : 0;
+      const salida = t.origen === bodegaSeleccionada ? Number(t.cantidad) : 0;
+      if (!ingreso && !salida) continue;
+      saldo += ingreso - salida;
+      resultado[id] = {
+        FECHA: t.fecha || "",
+        DESCRIPCION: ingreso ? "RECEPCIÓN TRASLADO" : "ENVÍO A OTRA BODEGA",
+        OBSERVACIONES: t.lote,
+        INGRESO: ingreso || "",
+        SALIDA: salida || "",
+        SALDO: saldo,
+        STOCK_RESERVADO: "",
+        STOCK_DISPONIBLE: saldo,
+        STOCK_TEORICO: saldo,
+        CREATED_AT: Number(t.creadoEn || 0),
+      };
+    }
+    return resultado;
+  }, [selectedProduct, selectedProvider, bodegaSeleccionada, traslados]);
+
+  const movementRows = useMemo(() => sortMovementRows(movimientosBodega), [movimientosBodega]);
 
   const lotOptions = useMemo(() => {
+    if (bodegaSeleccionada !== BODEGA_PRINCIPAL_ID && selectedProduct && selectedProvider) {
+      const clave = claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id});
+      const existencia = inventarioBodega[clave] as (ExistenciaBodega & {lotes?:Record<string,number>}) | undefined;
+      return Object.entries(existencia?.lotes || {}).filter(([,cantidad]) => Number(cantidad)>0).map(([lote,cantidad],i) => ({lote,balance:Number(cantidad),firstOrder:i,lastOrder:i}));
+    }
     return getLotsNewestFirst(selectedProduct?.movimientosRaw);
-  }, [selectedProduct]);
+  }, [selectedProduct, selectedProvider, bodegaSeleccionada, inventarioBodega]);
 
   const mustSelectExistingLot = useMemo(() => {
     return operationType === "OP" || operationType === "REINTEGRO" || operationType === "AJUSTE" || operationType === "TRASLADO";
@@ -1014,17 +1045,21 @@ export default function ProveedoresBodegaPage() {
 
   const currentBalance = useMemo(() => {
     const firstMovement = movementRows[0];
+    if (bodegaSeleccionada !== BODEGA_PRINCIPAL_ID && selectedProduct && selectedProvider) {
+      const clave = claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id});
+      return Number(inventarioBodega[clave]?.stockFisico || 0);
+    }
     return toNumber(firstMovement?.saldo || selectedProduct?.stock || 0);
-  }, [movementRows, selectedProduct]);
+  }, [movementRows, selectedProduct, selectedProvider, bodegaSeleccionada, inventarioBodega]);
 
   const movementBaseBalance = useMemo(() => {
     const previousBalance = getPreviousBalanceForMovement(
-      selectedProduct?.movimientosRaw,
+      movimientosBodega,
       editingMovementId
     );
 
     return previousBalance === null ? currentBalance : previousBalance;
-  }, [selectedProduct, editingMovementId, currentBalance]);
+  }, [movimientosBodega, editingMovementId, currentBalance]);
 
   const calculatedBalance = useMemo(() => {
     const ingreso = toNumber(movementForm.INGRESO);
@@ -2028,6 +2063,11 @@ export default function ProveedoresBodegaPage() {
       return;
     }
 
+    if (bodegaSeleccionada !== BODEGA_PRINCIPAL_ID) {
+      setError("Los movimientos de bodegas secundarias requieren su propio registro transaccional. Por seguridad aún no se pueden guardar desde esta bodega.");
+      return;
+    }
+
     if (operationType === "TRASLADO") {
       if (savingMovement) return;
       const cantidad = Number(movementForm.SALIDA);
@@ -2827,36 +2867,7 @@ export default function ProveedoresBodegaPage() {
           </div>
         )}
 
-        {selectedProduct && selectedProvider && bodegaSeleccionada !== BODEGA_PRINCIPAL_ID ? (
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <button type="button" onClick={handleBackToProducts} className="mb-4 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-[#244C5A]">← Volver a productos</button>
-            <p className="text-sm font-bold text-teal-700">{bodegaSeleccionada} · Historial de movimientos</p>
-            <h2 className="mb-2 text-2xl font-black text-slate-900">{selectedProduct.producto}</h2>
-            <p className="mb-5 text-sm text-slate-600">Movimientos registrados para esta bodega. Las recepciones pendientes aún no forman parte del stock disponible.</p>
-            <div className="mb-5 flex flex-wrap gap-3">
-              <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold">Stock real: {normalizeNumber(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.stockFisico || 0)}</span>
-              <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold">Reservado: {normalizeNumber(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.reservado || 0)}</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead><tr className="border-b bg-slate-50 text-left text-xs uppercase text-slate-500"><th className="p-3">Fecha</th><th className="p-3">Operación</th><th className="p-3">Origen / destino</th><th className="p-3">Lote</th><th className="p-3 text-right">Ingreso</th><th className="p-3 text-right">Salida</th><th className="p-3">Estado</th></tr></thead>
-                <tbody>
-                  {Object.entries(traslados).filter(([,t]) => t.proveedorId === selectedProvider.codigoNodo && t.productoId === selectedProduct.id && (t.destino === bodegaSeleccionada || t.origen === bodegaSeleccionada)).sort((a,b) => (Number(b[1].creadoEn || 0) - Number(a[1].creadoEn || 0))).map(([id,t]) => (
-                    <tr key={id} className="border-b border-slate-100">
-                      <td className="p-3">{t.fecha || "—"}</td>
-                      <td className="p-3 font-bold">{t.destino === bodegaSeleccionada ? "Recepción por traslado" : "Despacho por traslado"}</td>
-                      <td className="p-3">{t.origen} → {t.destino}</td>
-                      <td className="p-3">{t.lote}</td>
-                      <td className="p-3 text-right">{t.destino === bodegaSeleccionada && t.estado !== "pendiente_recepcion" ? normalizeNumber(t.cantidad) : "—"}</td>
-                      <td className="p-3 text-right">{t.origen === bodegaSeleccionada ? normalizeNumber(t.cantidad) : "—"}</td>
-                      <td className="p-3 font-bold">{t.estado === "recibido_satisfaccion" ? "Recibido a satisfacción" : t.estado === "pendiente_recepcion" ? "En tránsito · pendiente" : "Traslado anterior acreditado"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ) : selectedProduct && selectedProvider ? (
+        {selectedProduct && selectedProvider ? (
           <>
             <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
               <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
