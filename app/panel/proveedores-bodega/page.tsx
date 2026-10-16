@@ -1998,7 +1998,7 @@ export default function ProveedoresBodegaPage() {
     }
 
     if (operationType === "TRASLADO") {
-      setError("El traslado aún no está habilitado para guardar: falta registrar la salida y la entrada de forma atómica. No se modificó inventario.");
+      setError("La validación del traslado está lista, pero el registro simultáneo en ambas bodegas requiere completar la transacción segura. No se modificó inventario.");
       return;
     }
     const ingreso = toNumber(movementForm.INGRESO);
@@ -2832,7 +2832,7 @@ export default function ProveedoresBodegaPage() {
                   can("proveedoresBodega", "editar")) && (
                   <button
                     type="submit"
-                    disabled={savingMovement || operationType === "TRASLADO"}
+                    disabled={savingMovement || (operationType === "TRASLADO" && (!bodegaDestino || toNumber(movementForm.SALIDA) <= 0 || toNumber(movementForm.SALIDA) > Math.max(0, currentBalance - toNumber(movementForm.STOCK_RESERVADO))))}
                     className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
                   >
                     {savingMovement ? (
@@ -2952,7 +2952,7 @@ export default function ProveedoresBodegaPage() {
                       <option value="">Selecciona la bodega destino</option>
                       {bodegasDisponibles.filter(b => b.id !== bodegaSeleccionada).map(b => <option key={b.id} value={b.id}>{b.id} · {b.nombre}</option>)}
                     </select>
-                    <p className="mt-2 text-xs text-amber-900">El traslado debe descontar origen y acreditar destino en una sola operación segura. Guardado temporalmente deshabilitado hasta integrar ambas escrituras.</p>
+                    <p className="mt-2 text-xs text-amber-900">Selecciona destino, lote y cantidad de salida. El sistema validará existencias antes de registrar el traslado.</p>
                   </div>
                 )}
                 <div className="xl:col-span-2">
