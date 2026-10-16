@@ -854,6 +854,7 @@ export default function ProveedoresBodegaPage() {
   const [providers, setProviders] = useState<ProviderRow[]>([]);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<{id:string; nombre:string}[]>([]);
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState(BODEGA_PRINCIPAL_ID);
+  const [bodegaDestino, setBodegaDestino] = useState("");
   const [inventarioBodega, setInventarioBodega] = useState<Record<string, ExistenciaBodega>>({});
   const [cargandoInventarioBodega, setCargandoInventarioBodega] = useState(false);
   useEffect(() => {
@@ -975,7 +976,7 @@ export default function ProveedoresBodegaPage() {
   }, [selectedProduct]);
 
   const mustSelectExistingLot = useMemo(() => {
-    return operationType === "OP" || operationType === "REINTEGRO" || operationType === "AJUSTE";
+    return operationType === "OP" || operationType === "REINTEGRO" || operationType === "AJUSTE" || operationType === "TRASLADO";
   }, [operationType]);
 
   const canCreateLotFromMovement = useMemo(() => {
@@ -1996,6 +1997,10 @@ export default function ProveedoresBodegaPage() {
       return;
     }
 
+    if (operationType === "TRASLADO") {
+      setError("El traslado aún no está habilitado para guardar: falta registrar la salida y la entrada de forma atómica. No se modificó inventario.");
+      return;
+    }
     const ingreso = toNumber(movementForm.INGRESO);
     const salida = toNumber(movementForm.SALIDA);
 
@@ -2827,7 +2832,7 @@ export default function ProveedoresBodegaPage() {
                   can("proveedoresBodega", "editar")) && (
                   <button
                     type="submit"
-                    disabled={savingMovement}
+                    disabled={savingMovement || operationType === "TRASLADO"}
                     className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
                   >
                     {savingMovement ? (
@@ -2869,13 +2874,14 @@ export default function ProveedoresBodegaPage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         setOperationType(value);
+                        setBodegaDestino("");
                         setOperationConsecutive("");
                         handleMovementChange("DESCRIPCION", value ? `${value}-` : "");
                         handleMovementChange("OBSERVACIONES", "");
                         if (value === "COMPRA" || value === "REINTEGRO") {
                           handleMovementChange("SALIDA", "");
                         }
-                        if (value === "OP") {
+                        if (value === "OP" || value === "TRASLADO") {
                           handleMovementChange("INGRESO", "");
                         }
                       }}
@@ -2885,6 +2891,7 @@ export default function ProveedoresBodegaPage() {
                       <option value="COMPRA">COMPRA</option>
                       <option value="OP">OP</option>
                       <option value="REINTEGRO">REINTEGRO</option>
+                      <option value="TRASLADO">ENVIAR A OTRA BODEGA</option>
                       <option value="AJUSTE" disabled={!isMaster && !adjustmentApproved}>
                         AJUSTE {!isMaster && !adjustmentApproved ? "(bloqueado)" : ""}
                       </option>
@@ -2938,6 +2945,16 @@ export default function ProveedoresBodegaPage() {
                   </div>
                 </div>
 
+                {operationType === "TRASLADO" && (
+                  <div className="xl:col-span-7 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <label className="mb-2 block text-sm font-bold text-amber-950">Bodega destino</label>
+                    <select value={bodegaDestino} onChange={e => setBodegaDestino(e.target.value)} className="w-full max-w-md rounded-xl border border-amber-200 bg-white px-4 py-3">
+                      <option value="">Selecciona la bodega destino</option>
+                      {bodegasDisponibles.filter(b => b.id !== bodegaSeleccionada).map(b => <option key={b.id} value={b.id}>{b.id} · {b.nombre}</option>)}
+                    </select>
+                    <p className="mt-2 text-xs text-amber-900">El traslado debe descontar origen y acreditar destino en una sola operación segura. Guardado temporalmente deshabilitado hasta integrar ambas escrituras.</p>
+                  </div>
+                )}
                 <div className="xl:col-span-2">
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Lote
@@ -2989,7 +3006,7 @@ export default function ProveedoresBodegaPage() {
                   <input
                     type="number"
                     value={normalizeText(movementForm.INGRESO)}
-                    disabled={operationType === "OP" || (!isMaster && operationType === "AJUSTE" && !adjustmentApproved)}
+                    disabled={operationType === "OP" || operationType === "TRASLADO" || (!isMaster && operationType === "AJUSTE" && !adjustmentApproved)}
                     onChange={(e) => handleMovementChange("INGRESO", e.target.value)}
                     placeholder="0"
                     className="w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3 outline-none focus:bg-white focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:opacity-60 disabled:cursor-not-allowed"
