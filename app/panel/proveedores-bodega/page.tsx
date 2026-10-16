@@ -855,6 +855,8 @@ export default function ProveedoresBodegaPage() {
   const [bodegasDisponibles, setBodegasDisponibles] = useState<{id:string; nombre:string}[]>([]);
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState(BODEGA_PRINCIPAL_ID);
   const [bodegaDestino, setBodegaDestino] = useState("");
+  const [traslados, setTraslados] = useState<Record<string, { proveedorId: string; productoId: string; origen: string; destino: string; lote: string; cantidad: number; estado?: string }>>({});
+  useEffect(() => onValue(ref(realtimeDb, "TRASLADOS_BODEGAS"), snap => setTraslados(snap.val() || {})), [realtimeDb]);
   const [inventarioBodega, setInventarioBodega] = useState<Record<string, ExistenciaBodega>>({});
   const [cargandoInventarioBodega, setCargandoInventarioBodega] = useState(false);
   useEffect(() => {
@@ -954,6 +956,7 @@ export default function ProveedoresBodegaPage() {
     const visibles = bodegaSeleccionada === BODEGA_PRINCIPAL_ID
       ? products
       : products.filter(item => {
+          if (Object.values(traslados).some(t => t.destino === bodegaSeleccionada && t.proveedorId === selectedProvider?.codigoNodo && t.productoId === item.id && t.estado === "pendiente_recepcion")) return true;
           if (!selectedProvider) return false;
           const clave = claveInsumo({ proveedorId: selectedProvider.codigoNodo, productoId: item.id });
           return Object.prototype.hasOwnProperty.call(inventarioBodega, clave);
@@ -965,7 +968,7 @@ export default function ProveedoresBodegaPage() {
       normalizeText(item.unidadEmpaque).toLowerCase().includes(cleanSearch) ||
       normalizeText(item.hojaDetalle).toLowerCase().includes(cleanSearch)
     );
-  }, [products, productSearch, bodegaSeleccionada, inventarioBodega, selectedProvider]);
+  }, [products, productSearch, bodegaSeleccionada, inventarioBodega, selectedProvider, traslados]);
 
   const movementRows = useMemo(() => {
     return sortMovementRows(selectedProduct?.movimientosRaw);
@@ -1981,6 +1984,34 @@ export default function ProveedoresBodegaPage() {
     }
   };
 
+  const confirmarRecepcion = async (id: string) => {
+    const t = traslados[id];
+    if (!t || t.estado !== "pendiente_recepcion" || t.destino !== bodegaSeleccionada) return;
+    if (!can("proveedoresBodega", "editar")) { setError("No tienes permiso para confirmar recepciones."); return; }
+    if (!window.confirm(`¿Confirmas que recibiste físicamente ${t.cantidad} unidades del lote ${t.lote}?`)) return;
+    setError("");
+    try {
+      const key = claveInsumo({ proveedorId: t.proveedorId, productoId: t.productoId });
+      const path = `INVENTARIO_BODEGAS/${t.destino}/${key}`;
+      const [trSnap, exSnap] = await Promise.all([get(ref(realtimeDb, `TRASLADOS_BODEGAS/${id}`)), get(ref(realtimeDb, path))]);
+      if (!trSnap.exists() || trSnap.val().estado !== "pendiente_recepcion") throw new Error("El traslado ya no está pendiente.");
+      const ex = (exSnap.val() || {}) as ExistenciaBodega & { lotes?: Record<string, number> };
+      const fisico = Number(ex.stockFisico || 0), reservado = Number(ex.reservado || 0), lote = Number(ex.lotes?.[t.lote] || 0), cantidad = Number(t.cantidad);
+      if (![fisico,reservado,lote,cantidad].every(Number.isFinite) || fisico < reservado || reservado < 0 || lote < 0 || cantidad <= 0) throw new Error("Inventario inconsistente.");
+      const ahora = Date.now();
+      await update(ref(realtimeDb), {
+        [`${path}/stockFisico`]: fisico + cantidad,
+        [`${path}/reservado`]: reservado,
+        [`${path}/actualizadoEn`]: ahora,
+        [`${path}/lotes/${t.lote}`]: lote + cantidad,
+        [`TRASLADOS_BODEGAS/${id}/estado`]: "recibido_satisfaccion",
+        [`TRASLADOS_BODEGAS/${id}/recibidoEn`]: ahora,
+        [`TRASLADOS_BODEGAS/${id}/recibidoPor`]: authUser?.uid || "",
+      });
+      setMessage("Recepción confirmada y existencias acreditadas.");
+    } catch (err: any) { setError(`Error al confirmar: ${err?.message || ""}`); }
+  };
+
   const handleSaveMovement = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -2028,9 +2059,8 @@ export default function ProveedoresBodegaPage() {
       try {
         const productPath = `PROVEEDORES/${selectedProvider.codigoNodo}/${selectedProvider.nombreNodo}/PRODUCTOS/${selectedProduct.id}`;
         const key = claveInsumo({ proveedorId: selectedProvider.codigoNodo, productoId: selectedProduct.id });
-        const [origenSnap, destinoSnap, bodegaSnap] = await Promise.all([
+        const [origenSnap, bodegaSnap] = await Promise.all([
           get(ref(realtimeDb, productPath)),
-          get(ref(realtimeDb, `INVENTARIO_BODEGAS/${bodegaDestino}/${key}`)),
           get(ref(realtimeDb, `BODEGAS/${bodegaDestino}`)),
         ]);
         if (!origenSnap.exists() || !bodegaSnap.exists() || bodegaSnap.val()?.eliminada || bodegaSnap.val()?.activa === false) {
@@ -2045,19 +2075,12 @@ export default function ProveedoresBodegaPage() {
         if (!loteActual || cantidad > loteActual.balance || cantidad > disponibleOrigen || (loteAntiguo && loteAntiguo.lote !== lote)) {
           throw new Error("Existencias insuficientes, reservadas o debes agotar primero el lote más antiguo.");
         }
-        const destinoActual = (destinoSnap.val() || {}) as ExistenciaBodega & { lotes?: Record<string, number> };
-        const destinoFisico = Number(destinoActual.stockFisico || 0);
-        const destinoReservado = Number(destinoActual.reservado || 0);
-        if (!Number.isFinite(destinoFisico) || !Number.isFinite(destinoReservado) || destinoFisico < 0 || destinoReservado < 0 || destinoReservado > destinoFisico) {
-          throw new Error("La bodega destino presenta existencias inconsistentes.");
-        }
         const ahora = Date.now();
         const movimientoKey = nextMovementKey(movimientos);
         const operacionId = `TRASLADO-${ahora}-${Math.random().toString(36).slice(2, 10)}`;
         const nuevoSaldo = toNumber(saldo.stockReal) - cantidad;
         const reserva = toNumber(saldo.stockReservado);
         const disponible = nuevoSaldo - reserva;
-        const destinoPath = `INVENTARIO_BODEGAS/${bodegaDestino}/${key}`;
         const updates: Record<string, unknown> = {
           [`${productPath}/MOVIMIENTOS/${movimientoKey}`]: {
             FECHA: fecha, DESCRIPCION: `TRASLADO-${referencia}`, OBSERVACIONES: lote,
@@ -2067,19 +2090,15 @@ export default function ProveedoresBodegaPage() {
             OPERACION_ID: operacionId, BODEGA_ORIGEN: BODEGA_PRINCIPAL_ID, BODEGA_DESTINO: bodegaDestino,
           },
           [`${productPath}/DATOS_PRODUCTO/STOCK`]: nuevoSaldo,
-          [`${destinoPath}/stockFisico`]: destinoFisico + cantidad,
-          [`${destinoPath}/reservado`]: destinoReservado,
-          [`${destinoPath}/actualizadoEn`]: ahora,
-          [`${destinoPath}/lotes/${lote}`]: Number(destinoActual.lotes?.[lote] || 0) + cantidad,
           [`TRASLADOS_BODEGAS/${operacionId}`]: {
             id: operacionId, referencia, fecha, creadoEn: ahora,
             proveedorId: selectedProvider.codigoNodo, productoId: selectedProduct.id,
             producto: selectedProduct.producto, lote, cantidad,
-            origen: BODEGA_PRINCIPAL_ID, destino: bodegaDestino, usuarioUid: authUser?.uid || "",
+            origen: BODEGA_PRINCIPAL_ID, destino: bodegaDestino, usuarioUid: authUser?.uid || "", estado: "pendiente_recepcion",
           },
         };
         await update(ref(realtimeDb), updates);
-        setMessage(`Traslado registrado: ${cantidad} unidades del lote ${lote} enviadas a ${bodegaDestino}.`);
+        setMessage(`Despacho registrado: ${cantidad} unidades del lote ${lote} en tránsito hacia ${bodegaDestino}, pendiente de recepción.`);
         setOperationType("");
         setOperationConsecutive("");
         setBodegaDestino("");
@@ -3442,6 +3461,7 @@ export default function ProveedoresBodegaPage() {
                         <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
                           Bodega
                         </th>
+                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">Recepción</th>
                         <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
                           Stock real
                         </th>
@@ -3536,6 +3556,17 @@ export default function ProveedoresBodegaPage() {
                             </span>
                           </td>
 
+                          <td className="px-5 py-4 text-xs">
+                            {Object.entries(traslados).filter(([,t]) => t.proveedorId === selectedProvider.codigoNodo && t.productoId === item.id && (t.destino === bodegaSeleccionada || t.origen === bodegaSeleccionada)).map(([id,t]) => (
+                              <div key={id} className="mb-1 rounded-lg border border-slate-200 p-2">
+                                <div>{t.origen} → {t.destino} · Lote {t.lote} · {t.cantidad} und.</div>
+                                <strong>{t.estado === "recibido_satisfaccion" ? "Recibido a satisfacción" : t.estado === "pendiente_recepcion" ? "Pendiente de recepción" : "Traslado anterior (acreditado)"}</strong>
+                                {t.estado === "pendiente_recepcion" && t.destino === bodegaSeleccionada && (
+                                  <button type="button" onClick={e => {e.stopPropagation(); void confirmarRecepcion(id);}} className="mt-1 block rounded-lg bg-teal-700 px-2 py-1 font-bold text-white">Confirmar recepción</button>
+                                )}
+                              </div>
+                            ))}
+                          </td>
                           <td className="px-5 py-4">
                             <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black ${toNumber(latestStock.stockReal) < 0 ? "bg-red-100 text-red-700 border-red-200" : "bg-slate-100 text-slate-700 border-slate-200"}`}>
                               {normalizeNumber(latestStock.stockReal)}
