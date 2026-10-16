@@ -2084,7 +2084,7 @@ export default function ProveedoresBodegaPage() {
         setOperationConsecutive("");
         setBodegaDestino("");
         setMovementForm(emptyMovement);
-        await loadProviders();
+        // El listener onValue de PROVEEDORES actualiza productos y saldos automáticamente.
       } catch (err: any) {
         setError(`No se pudo realizar el traslado. ${err?.message || ""}`);
       } finally {
