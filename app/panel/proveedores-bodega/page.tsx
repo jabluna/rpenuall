@@ -3279,7 +3279,7 @@ export default function ProveedoresBodegaPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1380px] border-collapse">
+                  <table className="w-full min-w-[1510px] border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
                         <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
@@ -3296,6 +3296,9 @@ export default function ProveedoresBodegaPage() {
                         </th>
                         <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
                           Costo
+                        </th>
+                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                          Bodega
                         </th>
                         <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
                           Stock real
@@ -3376,6 +3379,12 @@ export default function ProveedoresBodegaPage() {
 
                           <td className="px-5 py-4 text-sm font-bold text-slate-800">
                             {normalizeMoney(item.costo)}
+                          </td>
+
+                          <td className="px-5 py-4 text-sm">
+                            <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-bold text-teal-900" title="Stock heredado asociado visualmente a la bodega principal; migración multibodega pendiente">
+                              BOD-001 · Principal
+                            </span>
                           </td>
 
                           <td className="px-5 py-4">
