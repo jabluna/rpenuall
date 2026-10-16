@@ -855,7 +855,7 @@ export default function ProveedoresBodegaPage() {
   const [bodegasDisponibles, setBodegasDisponibles] = useState<{id:string; nombre:string}[]>([]);
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState(BODEGA_PRINCIPAL_ID);
   const [bodegaDestino, setBodegaDestino] = useState("");
-  const [traslados, setTraslados] = useState<Record<string, { proveedorId: string; productoId: string; origen: string; destino: string; lote: string; cantidad: number; estado?: string }>>({});
+  const [traslados, setTraslados] = useState<Record<string, { proveedorId: string; productoId: string; origen: string; destino: string; lote: string; cantidad: number; estado?: string; creadoEn?: number; fecha?: string }>>({});
   useEffect(() => onValue(ref(realtimeDb, "TRASLADOS_BODEGAS"), snap => setTraslados(snap.val() || {})), [realtimeDb]);
   const [inventarioBodega, setInventarioBodega] = useState<Record<string, ExistenciaBodega>>({});
   const [cargandoInventarioBodega, setCargandoInventarioBodega] = useState(false);
@@ -2827,7 +2827,36 @@ export default function ProveedoresBodegaPage() {
           </div>
         )}
 
-        {selectedProduct && selectedProvider ? (
+        {selectedProduct && selectedProvider && bodegaSeleccionada !== BODEGA_PRINCIPAL_ID ? (
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <button type="button" onClick={handleBackToProducts} className="mb-4 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-[#244C5A]">← Volver a productos</button>
+            <p className="text-sm font-bold text-teal-700">{bodegaSeleccionada} · Historial de movimientos</p>
+            <h2 className="mb-2 text-2xl font-black text-slate-900">{selectedProduct.producto}</h2>
+            <p className="mb-5 text-sm text-slate-600">Movimientos registrados para esta bodega. Las recepciones pendientes aún no forman parte del stock disponible.</p>
+            <div className="mb-5 flex flex-wrap gap-3">
+              <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold">Stock real: {normalizeNumber(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.stockFisico || 0)}</span>
+              <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold">Reservado: {normalizeNumber(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.reservado || 0)}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead><tr className="border-b bg-slate-50 text-left text-xs uppercase text-slate-500"><th className="p-3">Fecha</th><th className="p-3">Operación</th><th className="p-3">Origen / destino</th><th className="p-3">Lote</th><th className="p-3 text-right">Ingreso</th><th className="p-3 text-right">Salida</th><th className="p-3">Estado</th></tr></thead>
+                <tbody>
+                  {Object.entries(traslados).filter(([,t]) => t.proveedorId === selectedProvider.codigoNodo && t.productoId === selectedProduct.id && (t.destino === bodegaSeleccionada || t.origen === bodegaSeleccionada)).sort((a,b) => (Number(b[1].creadoEn || 0) - Number(a[1].creadoEn || 0))).map(([id,t]) => (
+                    <tr key={id} className="border-b border-slate-100">
+                      <td className="p-3">{t.fecha || "—"}</td>
+                      <td className="p-3 font-bold">{t.destino === bodegaSeleccionada ? "Recepción por traslado" : "Despacho por traslado"}</td>
+                      <td className="p-3">{t.origen} → {t.destino}</td>
+                      <td className="p-3">{t.lote}</td>
+                      <td className="p-3 text-right">{t.destino === bodegaSeleccionada && t.estado !== "pendiente_recepcion" ? normalizeNumber(t.cantidad) : "—"}</td>
+                      <td className="p-3 text-right">{t.origen === bodegaSeleccionada ? normalizeNumber(t.cantidad) : "—"}</td>
+                      <td className="p-3 font-bold">{t.estado === "recibido_satisfaccion" ? "Recibido a satisfacción" : t.estado === "pendiente_recepcion" ? "En tránsito · pendiente" : "Traslado anterior acreditado"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : selectedProduct && selectedProvider ? (
           <>
             <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
               <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
@@ -3498,9 +3527,9 @@ export default function ProveedoresBodegaPage() {
                         return (
                         <tr
                           key={item.id}
-                          onClick={() => { if (bodegaSeleccionada === BODEGA_PRINCIPAL_ID) handleOpenProduct(item); }}
-                          className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50 ${bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "cursor-pointer" : "cursor-default"}`}
-                          title={bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "Ver movimientos" : "Historial de esta bodega pendiente de integración"}
+                          onClick={() => handleOpenProduct(item)}
+                          className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50 cursor-pointer`}
+                          title="Ver movimientos de esta bodega"
                         >
                           <td className="px-5 py-4">
                             <span className="inline-flex items-center gap-2 rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
