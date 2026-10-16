@@ -46,6 +46,7 @@ import { getDownloadURL, getStorage, ref as storageRef, uploadBytes } from "fire
 import { auth } from "@/lib/firebase";
 import { useUserPermissions } from "@/lib/useUserPermissions";
 import NoPermission from "@/components/NoPermission";
+import { BODEGA_PRINCIPAL_ID, claveInsumo, type ExistenciaBodega } from "@/lib/multibodega/modelo";
 
 type ProviderData = {
   CODIGO: string;
@@ -851,6 +852,26 @@ export default function ProveedoresBodegaPage() {
   } = useUserPermissions();
 
   const [providers, setProviders] = useState<ProviderRow[]>([]);
+  const [bodegasDisponibles, setBodegasDisponibles] = useState<{id:string; nombre:string}[]>([]);
+  const [bodegaSeleccionada, setBodegaSeleccionada] = useState(BODEGA_PRINCIPAL_ID);
+  const [inventarioBodega, setInventarioBodega] = useState<Record<string, ExistenciaBodega>>({});
+  const [cargandoInventarioBodega, setCargandoInventarioBodega] = useState(false);
+  useEffect(() => {
+    return onValue(ref(realtimeDb, "BODEGAS"), snapshot => {
+      const raw = (snapshot.val() || {}) as Record<string, {nombre?: string; activa?: boolean; eliminada?: boolean}>;
+      setBodegasDisponibles(Object.entries(raw).filter(([,b]) => b.activa !== false && !b.eliminada).map(([id,b]) => ({id, nombre: b.nombre || id})).sort((a,b) => a.id === BODEGA_PRINCIPAL_ID ? -1 : b.id === BODEGA_PRINCIPAL_ID ? 1 : a.nombre.localeCompare(b.nombre)));
+    });
+  }, [realtimeDb]);
+  useEffect(() => {
+    if (bodegaSeleccionada === BODEGA_PRINCIPAL_ID) { setInventarioBodega({}); setCargandoInventarioBodega(false); return; }
+    setCargandoInventarioBodega(true);
+    setInventarioBodega({});
+    return onValue(ref(realtimeDb, "INVENTARIO_BODEGAS/" + bodegaSeleccionada), snapshot => {
+      setInventarioBodega((snapshot.val() || {}) as Record<string, ExistenciaBodega>);
+      setCargandoInventarioBodega(false);
+    }, () => { setInventarioBodega({}); setCargandoInventarioBodega(false); });
+  }, [realtimeDb, bodegaSeleccionada]);
+
   const [loadingProviders, setLoadingProviders] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
@@ -1492,6 +1513,7 @@ export default function ProveedoresBodegaPage() {
   };
 
   const handleOpenProvider = (provider: ProviderRow) => {
+    setBodegaSeleccionada(BODEGA_PRINCIPAL_ID);
     setSelectedProvider(provider);
     setSelectedProduct(null);
     setProductForm(emptyProduct);
@@ -3267,6 +3289,15 @@ export default function ProveedoresBodegaPage() {
               </div>
 
 
+              <div className="mx-5 mb-5 flex flex-wrap items-center gap-4 rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
+                <label className="text-sm font-bold text-slate-700" htmlFor="selector-bodega-proveedor">Bodega</label>
+                <select id="selector-bodega-proveedor" value={bodegaSeleccionada} onChange={e => setBodegaSeleccionada(e.target.value)} className="min-w-60 rounded-xl border border-teal-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+                  {!bodegasDisponibles.some(b => b.id === BODEGA_PRINCIPAL_ID) && <option value={BODEGA_PRINCIPAL_ID}>BOD-001 · Principal</option>}
+                  {bodegasDisponibles.map(b => <option key={b.id} value={b.id}>{b.id} · {b.nombre}</option>)}
+                </select>
+                <span className="text-xs text-slate-600">{bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "Inventario histórico de la bodega principal." : "Consulta de inventario independiente. Movimientos en esta bodega aún no habilitados."}</span>
+              </div>
+              {cargandoInventarioBodega && bodegaSeleccionada !== BODEGA_PRINCIPAL_ID && <p className="px-5 pb-3 text-sm text-slate-500">Cargando existencias de la bodega…</p>}
               {filteredProducts.length === 0 ? (
                 <div className="p-8 text-center">
                   <PackageSearch className="mx-auto text-[#244C5A]" size={44} />
@@ -3320,8 +3351,15 @@ export default function ProveedoresBodegaPage() {
 
                     <tbody>
                       {filteredProducts.map((item) => {
-                        const latestStock = getLatestProductStock({ DATOS_PRODUCTO: item.datos, MOVIMIENTOS: item.movimientosRaw || {} });
-                        const semaphore = productSemaphoreMap.get(item.codigo);
+                        const principal = bodegaSeleccionada === BODEGA_PRINCIPAL_ID;
+                        const clave = claveInsumo({ proveedorId: selectedProvider.codigoNodo, productoId: item.id });
+                        const existencia = inventarioBodega[clave];
+                        const fisico = Number(existencia?.stockFisico) || 0;
+                        const reservado = Number(existencia?.reservado) || 0;
+                        const latestStock = principal
+                          ? getLatestProductStock({ DATOS_PRODUCTO: item.datos, MOVIMIENTOS: item.movimientosRaw || {} })
+                          : { stockReal: fisico, stockReservado: reservado, stockDisponible: fisico - reservado, stockTeorico: fisico - reservado };
+                        const semaphore = principal ? productSemaphoreMap.get(item.codigo) : undefined;
                         const disponibleStatus = semaphore?.disponibleStatus || "ok";
                         const teoricoStatus = semaphore?.teoricoStatus || "ok";
                         const worstStatus = getWorstStatus([disponibleStatus, teoricoStatus]);
@@ -3329,9 +3367,9 @@ export default function ProveedoresBodegaPage() {
                         return (
                         <tr
                           key={item.id}
-                          onClick={() => handleOpenProduct(item)}
-                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50 cursor-pointer"
-                          title="Ver movimientos"
+                          onClick={() => { if (bodegaSeleccionada === BODEGA_PRINCIPAL_ID) handleOpenProduct(item); }}
+                          className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50 ${bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "cursor-pointer" : "cursor-default"}`}
+                          title={bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? "Ver movimientos" : "Historial de esta bodega pendiente de integración"}
                         >
                           <td className="px-5 py-4">
                             <span className="inline-flex items-center gap-2 rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
@@ -3383,7 +3421,7 @@ export default function ProveedoresBodegaPage() {
 
                           <td className="px-5 py-4 text-sm">
                             <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-bold text-teal-900" title="Stock heredado asociado visualmente a la bodega principal; migración multibodega pendiente">
-                              BOD-001 · Principal
+                              {bodegaSeleccionada} · {bodegasDisponibles.find(b => b.id === bodegaSeleccionada)?.nombre || "Principal"}
                             </span>
                           </td>
 
