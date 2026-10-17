@@ -698,7 +698,7 @@ export default function PanelPage() {
           ) : errorAlertas ? (
             <section className="rounded-2xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{errorAlertas}</section>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               <AlertCard
                 id="alertas-bodega"
                 titulo="Alertas de bodega"
@@ -833,16 +833,7 @@ export default function PanelPage() {
 }
 
 function AlertCard({
-  id,
-  titulo,
-  subtitulo,
-  href,
-  boton,
-  icon: Icon,
-  stats,
-  items,
-  vacio,
-  porPagina = 3,
+  id, titulo, subtitulo, href, boton, icon: Icon, stats, items, vacio, porPagina = 3,
 }: {
   id: string;
   titulo: string;
@@ -855,33 +846,63 @@ function AlertCard({
   vacio: string;
   porPagina?: number;
 }) {
+  const [abierto, setAbierto] = useState(false);
   const pendientes = items.length;
-
   return (
-    <article id={id} className="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#244C5A]/10 text-[#244C5A] flex items-center justify-center shrink-0">
+    <>
+      <button
+        id={id}
+        type="button"
+        onClick={() => setAbierto(true)}
+        aria-haspopup="dialog"
+        className="group flex min-h-[108px] w-full flex-col justify-between rounded-xl border border-emerald-300 bg-white p-3 text-left shadow-sm transition hover:border-emerald-500 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+      >
+        <div className="flex w-full items-start gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-[#244C5A]">
             <Icon size={19} />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <h3 className="text-base font-black truncate">{titulo}</h3>
-              <span className="shrink-0 rounded-full bg-red-50 border border-red-100 px-2 py-0.5 text-[10px] font-black text-red-700 animate-pulse">{pendientes} pendientes</span>
-            </div>
-            <p className="text-xs text-slate-500 truncate">{subtitulo}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-black text-slate-900">{titulo}</p>
+            <p className="mt-0.5 truncate text-[11px] text-slate-500">{subtitulo}</p>
           </div>
+          <Eye size={16} className="shrink-0 text-slate-400 group-hover:text-emerald-700" />
         </div>
-
-        <Link href={href} className="shrink-0 rounded-xl bg-[#244C5A] hover:bg-[#1b3b46] text-white font-black px-3 py-2 text-xs inline-flex items-center gap-1.5 transition">
-          {boton}
-        </Link>
-      </div>
-
-      <div className="px-4 py-3">
-        <ListaAlertasCompacta items={items} vacio={vacio} porPagina={porPagina} />
-      </div>
-    </article>
+        <div className="mt-3 flex w-full items-center justify-between gap-2">
+          <span className={`rounded-lg px-2 py-1 text-xs font-black tabular-nums ${pendientes ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
+            {pendientes} pendientes
+          </span>
+          <span className="truncate text-[11px] font-semibold text-slate-500">Ver detalle →</span>
+        </div>
+      </button>
+      {abierto && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px] sm:p-6"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setAbierto(false); }}
+        >
+          <section role="dialog" aria-modal="true" aria-label={titulo} className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-[#244C5A]"><Icon size={19} /></div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-base font-black text-slate-900">{titulo}</h2>
+                  <p className="truncate text-xs text-slate-500">{subtitulo} · {pendientes} pendientes</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link href={href} className="rounded-lg bg-[#244C5A] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#1b3b46]">{boton}</Link>
+                <button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar detalle" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100"><X size={18} /></button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+              <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {stats.map((stat) => <MiniStat key={stat.label} {...stat} />)}
+              </div>
+              <ListaAlertasCompacta items={items} vacio={vacio} porPagina={porPagina} />
+            </div>
+          </section>
+        </div>
+      )}
+    </>
   );
 }
 
