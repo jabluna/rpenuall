@@ -3679,7 +3679,7 @@ export default function ProveedoresBodegaPage() {
                         <tr
                           key={item.id}
                           onClick={() => handleOpenProvider(item)}
-                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50 cursor-pointer"
+                          className="border-b border-emerald-100 even:bg-emerald-50/70 odd:bg-white last:border-b-0 hover:!bg-emerald-100/80 cursor-pointer transition-colors"
                           title="Ver productos"
                         >
                           <td className="px-5 py-4">
