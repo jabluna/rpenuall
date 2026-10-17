@@ -439,6 +439,7 @@ export default function CrearComprasAlertasPage() {
   const [manualFecha, setManualFecha] = useState(todayISO());
   const [items, setItems] = useState<CompraItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [detalleProductoOpen, setDetalleProductoOpen] = useState(false);
   const [duplicateOrderModal, setDuplicateOrderModal] =
     useState<DuplicateOrderModalState>(null);
   const [modalMode, setModalMode] = useState<"alerta" | "manual">("alerta");
@@ -967,6 +968,7 @@ export default function CrearComprasAlertasPage() {
     setSearch("");
     setAlertSearch("");
     setModalOpen(false);
+    setDetalleProductoOpen(false);
   };
 
   const openNewItemModal = (alertaId = "") => {
@@ -978,6 +980,7 @@ export default function CrearComprasAlertasPage() {
     setCajasPacas("");
     setSearch("");
     setAlertSearch("");
+    setDetalleProductoOpen(Boolean(alertaId));
     setModalOpen(true);
   };
 
@@ -993,6 +996,7 @@ export default function CrearComprasAlertasPage() {
     setCajasPacas("");
     setSearch("");
     setAlertSearch("");
+    setDetalleProductoOpen(Boolean(productId));
     setModalOpen(true);
   };
 
@@ -1008,6 +1012,7 @@ export default function CrearComprasAlertasPage() {
     setCajasPacas(item.cajasPacas || "");
     setSearch("");
     setAlertSearch("");
+    setDetalleProductoOpen(true);
     setModalOpen(true);
   };
 
@@ -1866,7 +1871,7 @@ export default function CrearComprasAlertasPage() {
       )}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-[32px] bg-white shadow-2xl">
+          <div className="flex w-full max-w-5xl max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">
@@ -1891,7 +1896,8 @@ export default function CrearComprasAlertasPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+              {!detalleProductoOpen && <div className="space-y-4">
               <div className="rounded-3xl bg-[#244C5A]/5 border border-[#244C5A]/10 p-4 flex items-start gap-3">
                 <AlertTriangle
                   className="text-[#244C5A] shrink-0 mt-0.5"
@@ -1999,7 +2005,7 @@ export default function CrearComprasAlertasPage() {
                               <button
                                 key={alerta.id}
                                 type="button"
-                                onClick={() => setSelectedAlertId(alerta.id)}
+                                onClick={() => { setSelectedAlertId(alerta.id); setDetalleProductoOpen(true); }}
                                 className={`w-full text-left px-4 py-3 border-b border-white transition ${getProviderGroupClass(providerKey)} ${active ? "ring-2 ring-inset ring-[#244C5A]" : ""}`}
                               >
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -2160,7 +2166,7 @@ export default function CrearComprasAlertasPage() {
                                     key={producto.id}
                                     type="button"
                                     onClick={() =>
-                                      setSelectedGeneralId(producto.id)
+                                      { setSelectedGeneralId(producto.id); setDetalleProductoOpen(true); }
                                     }
                                     className={`w-full text-left px-4 py-3 border-b border-white transition ${getProviderGroupClass(providerKey)} ${active ? "ring-2 ring-inset ring-[#244C5A]" : ""}`}
                                   >
@@ -2233,6 +2239,11 @@ export default function CrearComprasAlertasPage() {
                   )}
                 </div>
 
+              </div>
+              </div>}
+              {detalleProductoOpen && <div className="space-y-3">
+                <button type="button" onClick={() => setDetalleProductoOpen(false)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-[#244C5A]"><ArrowLeft size={15}/> Volver a la lista de productos</button>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {selectedModalMockupUrl && (
                   <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
                     <button
@@ -2338,7 +2349,8 @@ export default function CrearComprasAlertasPage() {
                   value={cajasPacas ? formatNumber(totalModal) : ""}
                   placeholder="Unidad de empaque × cajas/pacas"
                 />
-              </div>
+                </div>
+              </div>}
 
               <div className="rounded-3xl bg-slate-50 border border-slate-200 p-4">
                 <div className="flex items-center justify-between gap-3 mb-3">
@@ -2409,7 +2421,7 @@ export default function CrearComprasAlertasPage() {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+              {detalleProductoOpen && <div className="sticky bottom-0 z-10 -mx-4 -mb-4 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)] sm:-mx-5 sm:-mb-5 sm:px-5 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                   type="button"
                   onClick={resetModal}
@@ -2446,7 +2458,7 @@ export default function CrearComprasAlertasPage() {
                   )}
                   {saving ? "Creando..." : "Crear orden de compra"}
                 </button>
-              </div>
+              </div>}
             </div>
           </div>
         </div>
