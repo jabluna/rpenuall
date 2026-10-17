@@ -848,7 +848,7 @@ export default function RolesPage() {
                 })}
               </div>
               {formStep === 1 && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+                <div className="w-full lg:w-1/2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
                   <label htmlFor="nombre-rol" className="text-xs font-bold text-emerald-900">1. Nombre del rol</label>
                   <input id="nombre-rol" type="text" autoFocus value={roleName} disabled={editingId ? !can("roles", "editar") : !can("roles", "crear")} onChange={(e) => setRoleName(e.target.value)} placeholder="Ej. Bodega" className="mt-2 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500" />
                   <div className="mt-3 flex justify-end"><button type="button" disabled={!roleName.trim()} onClick={() => setFormStep(2)} className="rounded-lg bg-[#244C5A] px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Continuar a permisos →</button></div>
