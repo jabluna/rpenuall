@@ -2919,9 +2919,6 @@ export default function ProveedoresBodegaPage() {
                   <h2 className="text-2xl font-black mt-1">
                     {editingMovementId ? "Corregir movimiento" : "Registrar nuevo movimiento"}
                   </h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    El saldo se calcula igual que en Excel: saldo de la fila inferior + ingreso - salida.
-                  </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -3134,15 +3131,19 @@ export default function ProveedoresBodegaPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2 xl:col-span-7 rounded-3xl border border-[#244C5A]/15 bg-[#244C5A]/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <p className="text-sm text-[#244C5A]">
-                    <strong>Stock real calculado:</strong> {normalizeNumber(movementBaseBalance)} +{" "}
-                    {normalizeNumber(movementForm.INGRESO || 0)} -{" "}
-                    {normalizeNumber(movementForm.SALIDA || 0)}
-                  </p>
-                  <p className="text-2xl font-black text-[#244C5A]">
-                    {normalizeNumber(calculatedBalance)}
-                  </p>
+                <div className="md:col-span-2 xl:col-span-7 flex flex-col gap-3 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-900">
+                      <Boxes size={19} /> Stock real calculado
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-emerald-800">
+                      Actual: {normalizeNumber(movementBaseBalance)} + Ingreso: {normalizeNumber(movementForm.INGRESO || 0)} − Salida: {normalizeNumber(movementForm.SALIDA || 0)}
+                    </p>
+                  </div>
+                  <div className="flex items-baseline gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-white shadow-sm">
+                    <span className="text-xs font-bold uppercase tracking-wide text-emerald-100">Resultado</span>
+                    <span className="text-3xl font-black tabular-nums">{normalizeNumber(calculatedBalance)}</span>
+                  </div>
                 </div>
               </div>
             </form>
