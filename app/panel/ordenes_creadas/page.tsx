@@ -1596,7 +1596,7 @@ export default function OrdenesCreadasPage() {
                       </div>
 
                       <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {procesos.map((proceso) => {
+                        {procesos.map((proceso, procesoIndex) => {
                           const estado =
                             item.procesos?.[proceso.key] || "sin_verificar";
                           const meta = item.estadosMeta?.[proceso.key];
@@ -1609,7 +1609,7 @@ export default function OrdenesCreadasPage() {
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <p className="font-black text-sm text-slate-900">
-                                    {proceso.titulo}
+                                    {procesoIndex + 1}. {proceso.titulo}
                                   </p>
                                   <p className="text-[11px] font-bold text-slate-400 uppercase">
                                     {proceso.rol}
