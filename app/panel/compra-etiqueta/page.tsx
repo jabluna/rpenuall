@@ -387,7 +387,7 @@ export default function CompraEtiquetaPage() {
     return items.map((item, index) => ({ item, index })).filter(({ item }) => item.origen === "manual");
   }, [items]);
 
-  const quickPerPage = 10;
+  const quickPerPage = 5;
 
   const quickTotalPages = useMemo(() => {
     return Math.max(1, Math.ceil(alertasFiltradas.length / quickPerPage));
