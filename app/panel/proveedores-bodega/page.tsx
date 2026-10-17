@@ -2489,6 +2489,12 @@ export default function ProveedoresBodegaPage() {
             <p className="text-sm font-black text-slate-900">Administración de bodegas</p>
             <p className="text-xs text-slate-500">Consulta, crea y administra las ubicaciones de inventario.</p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedProduct && selectedProvider && (
+              <button type="button" onClick={handleBackToProducts} className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-black text-slate-950 shadow-sm ring-2 ring-amber-200 transition hover:bg-amber-300">
+                <ArrowLeft size={19} /> Volver a productos
+              </button>
+            )}
           <Link
             href="/panel/bodegas"
             className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#1d3d49]"
@@ -2497,6 +2503,7 @@ export default function ProveedoresBodegaPage() {
             Ver / crear bodegas
             <ChevronRight size={16} />
           </Link>
+          </div>
         </div>
 
         {(error || message) && (
@@ -2870,12 +2877,6 @@ export default function ProveedoresBodegaPage() {
         {selectedProduct && selectedProvider ? (
           <>
             <section className="mb-5 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <button type="button" onClick={handleBackToProducts} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-[#244C5A] hover:bg-slate-50">
-                  <ArrowLeft size={16} /> Volver a productos
-                </button>
-                <span className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800">Bodega {bodegaSeleccionada}</span>
-              </div>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
                 <div className="col-span-2 flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:col-span-1">
                   {selectedProduct.mockupUrl ? (
