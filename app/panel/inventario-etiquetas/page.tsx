@@ -1348,15 +1348,31 @@ export default function EtiquetasPage() {
                           </td>
                         </tr>
 
-                        {isSelectedCliente && (
-                          <tr className="border-b border-slate-200">
-                            <td colSpan={2} className="bg-slate-50/80 px-4 sm:px-8 py-6">
-                              <div className="rounded-[26px] border border-slate-200 bg-white overflow-hidden shadow-sm">
+
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </section>
+
+      {selectedCliente && (
+        <div className="fixed inset-0 z-[45] flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={event => { if(event.target === event.currentTarget) { setSelectedClienteId(null); setSelectedProductoId(null); } }}>
+          <div className="flex max-h-[95vh] w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between gap-3 bg-gradient-to-r from-[#244C5A] to-emerald-800 p-4 text-white sm:px-6">
+              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Segunda capa · Productos del cliente</p><h2 className="text-xl font-black">{selectedCliente.codigoCliente} · {selectedCliente.cliente}</h2></div>
+              <button type="button" onClick={() => {setSelectedClienteId(null);setSelectedProductoId(null);}} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Cerrar productos"><X size={20}/></button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-5">
+                                            <div className="rounded-[26px] border border-slate-200 bg-white overflow-hidden shadow-sm">
                                 <div className="p-5 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                   <div>
                                     <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">Segunda capa</p>
-                                    <h3 className="text-xl font-black mt-1">Productos de {cliente.codigoCliente}</h3>
-                                    <p className="text-slate-500 text-sm mt-1">{cliente.cliente || "Cliente sin nombre"}</p>
+                                    <h3 className="text-xl font-black mt-1">Productos de {selectedCliente.codigoCliente}</h3>
+                                    <p className="text-slate-500 text-sm mt-1">{selectedCliente.cliente || "Cliente sin nombre"}</p>
                                   </div>
 
                                   <div className="relative w-full xl:w-[380px]">
@@ -1372,7 +1388,7 @@ export default function EtiquetasPage() {
                                   </div>
                                 </div>
 
-                                {productosVisibles.length === 0 ? (
+                                {filteredProductos.length === 0 ? (
                                   <div className="p-8 text-center">
                                     <PackageSearch className="mx-auto text-[#244C5A]" size={44} />
                                     <h3 className="font-black text-slate-900 mt-4">No hay productos para mostrar</h3>
@@ -1398,7 +1414,7 @@ export default function EtiquetasPage() {
                                       </thead>
 
                                       <tbody>
-                                        {productosVisibles.map((producto) => {
+                                        {filteredProductos.map((producto) => {
                                           const isSelectedProducto = selectedProductoId === producto.id;
 
                                           return (
@@ -1477,20 +1493,7 @@ export default function EtiquetasPage() {
                                                 </td>
                                               </tr>
 
-                                              {isSelectedProducto && (
-                                                <tr className="border-b border-slate-200">
-                                                  <td colSpan={11} className="bg-slate-100/70 px-4 sm:px-7 py-6">
-                                                    <DetalleMovimientos
-                                                      producto={producto}
-                                                      draft={draft}
-                                                      onDraftChange={setDraft}
-                                                      onSave={handleSaveMovimiento}
-                                                      savingSide={savingSide}
-                                                      isMaster={isMaster}
-                                                    />
-                                                  </td>
-                                                </tr>
-                                              )}
+
                                             </Fragment>
                                           );
                                         })}
@@ -1499,18 +1502,21 @@ export default function EtiquetasPage() {
                                   </div>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
-          )}
-        </section>
-      </section>
+          </div>
+        </div>
+      )}
+
+      {selectedCliente && selectedProductoId && (() => {
+        const producto = selectedCliente.productos.find(item => item.id === selectedProductoId);
+        if (!producto) return null;
+        return <div className="fixed inset-0 z-[48] flex items-center justify-center bg-slate-950/75 p-2 backdrop-blur-sm sm:p-5">
+          <div className="flex max-h-[95vh] w-full max-w-[1450px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between gap-3 bg-gradient-to-r from-[#244C5A] to-emerald-800 p-4 text-white sm:px-6"><div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Tercera capa · Movimientos</p><h3 className="text-xl font-black">{producto.codigo}</h3></div><button type="button" onClick={() => setSelectedProductoId(null)} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Volver a productos"><X size={20}/></button></div>
+            <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-slate-50 p-3 sm:p-5"><DetalleMovimientos producto={producto} draft={draft} onDraftChange={setDraft} onSave={handleSaveMovimiento} savingSide={savingSide} isMaster={isMaster}/></div>
+          </div>
+        </div>;
+      })()}
 
       {editingProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
