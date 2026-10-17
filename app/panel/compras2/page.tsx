@@ -1559,6 +1559,7 @@ export default function CrearComprasAlertasPage() {
                   <h2 className="text-xl sm:text-2xl font-black mt-1 text-rose-900">
                     <AlertTriangle size={23} className="inline-block mr-2 align-middle text-rose-600" />Productos en alerta para comprar
                   </h2>
+                  <div className="mt-3"><button type="button" disabled={alertItems.length === 0} onClick={() => { setModalMode("alerta"); setModalOpen(false); setPreviewOrdenOpen(true); }} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-40"><Eye size={17} /> Previsualizar orden <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{alertItems.length}</span></button></div>
                 </div>
               </div>
 
@@ -1772,6 +1773,7 @@ export default function CrearComprasAlertasPage() {
                   Compra directa desde PROVEEDORES. Los productos se agregan y
                   editan dentro del modal.
                 </p>
+                <div className="mt-3"><button type="button" disabled={manualItems.length === 0} onClick={() => { setModalMode("manual"); setModalOpen(false); setPreviewOrdenOpen(true); }} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-40"><Eye size={17} /> Previsualizar orden <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{manualItems.length}</span></button></div>
               </div>
             </div>
 
@@ -2474,7 +2476,7 @@ export default function CrearComprasAlertasPage() {
                     <td className="p-3 text-xs">{item.proveedor}</td>
                     <td className="p-3 text-right font-bold tabular-nums">{item.cajasPacas}</td>
                     <td className="p-3 text-right font-black tabular-nums">{formatNumber(item.totalComprar)}</td>
-                    <td className="p-3 text-center"><button type="button" onClick={() => openEditItemModal(index)} className="rounded-lg border border-sky-200 px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-50">Editar</button></td>
+                    <td className="p-3 text-center"><button type="button" onClick={() => { setPreviewOrdenOpen(false); openEditItemModal(index); }} className="rounded-lg border border-sky-200 px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-50">Editar</button></td>
                   </tr>)}</tbody>
                 </table>
               </div>
