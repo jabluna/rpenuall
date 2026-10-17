@@ -435,7 +435,7 @@ function DetalleMovimientos({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] border-collapse">
+              <table className="w-full table-fixed border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white border-b border-slate-200">
                     <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">Fecha</th>
@@ -1146,7 +1146,7 @@ export default function EtiquetasPage() {
 
       <section className={`${sidebarWidth} transition-all duration-300`}>
       <header className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
+        <div className="w-full max-w-none mx-auto px-3 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -1200,7 +1200,7 @@ export default function EtiquetasPage() {
         </div>
       </header>
 
-      <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
+      <section className="w-full max-w-none mx-auto px-3 sm:px-6 py-6">
         {error && (
           <div className="mb-5 rounded-2xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
             {error}
@@ -1213,40 +1213,21 @@ export default function EtiquetasPage() {
           </div>
         )}
 
-        <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
-          <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
-          <div className="absolute right-24 bottom-[-80px] w-56 h-56 rounded-full bg-white/10" />
-
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <p className="text-sm text-white/65 uppercase tracking-wide font-bold">Inventario de etiquetas</p>
-              <h2 className="text-3xl sm:text-4xl font-black mt-1">Clientes, productos y movimientos</h2>
-              <p className="text-white/70 mt-2 max-w-3xl">
-                Haz clic sobre el código del cliente para desplegar sus productos. Luego haz clic sobre el código del producto para ver movimientos de frente y dorso.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                <p className="text-xs text-white/50 uppercase tracking-wide">Clientes</p>
-                <p className="text-2xl font-black mt-1">{clientes.length}</p>
-              </div>
-
-              <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                <p className="text-xs text-white/50 uppercase tracking-wide">Filtrados</p>
-                <p className="text-2xl font-black mt-1">{filteredClientes.length}</p>
-              </div>
-
-              <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                <p className="text-xs text-white/50 uppercase tracking-wide">Productos</p>
-                <p className="text-2xl font-black mt-1">{selectedCliente?.productos.length || 0}</p>
-              </div>
-            </div>
+        <section className="mb-5 space-y-3">
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5">
+            <p className="text-xs font-black uppercase tracking-widest text-emerald-700">Inventario de etiquetas</p>
+            <h2 className="mt-1 text-xl font-black text-[#244C5A] sm:text-2xl">Clientes, productos y movimientos</h2>
+            <p className="mt-1 text-sm text-slate-500">Selecciona un cliente para consultar sus productos y luego un producto para ver los movimientos de frente y dorso.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-xs font-black uppercase text-emerald-700">Clientes</p><p className="mt-1 text-2xl font-black text-emerald-950">{clientes.length}</p></div>
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4"><p className="text-xs font-black uppercase text-sky-700">Filtrados</p><p className="mt-1 text-2xl font-black text-sky-950">{filteredClientes.length}</p></div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="text-xs font-black uppercase text-amber-700">Productos del cliente</p><p className="mt-1 text-2xl font-black text-amber-950">{selectedCliente?.productos.length || 0}</p></div>
           </div>
         </section>
 
         <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="p-4 sm:p-5 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">Primera capa</p>
               <h2 className="text-2xl font-black mt-1">Clientes</h2>
@@ -1312,7 +1293,7 @@ export default function EtiquetasPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] border-collapse">
+              <table className="w-full table-fixed border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
                     <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">Código cliente</th>
@@ -1399,7 +1380,7 @@ export default function EtiquetasPage() {
                                   </div>
                                 ) : (
                                   <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[1450px] border-collapse">
+                                    <table className="w-full min-w-[900px] border-collapse text-xs xl:text-sm">
                                       <thead>
                                         <tr className="bg-slate-50 border-b border-slate-200">
                                           <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">Código</th>
