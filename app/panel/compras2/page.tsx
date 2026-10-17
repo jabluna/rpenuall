@@ -1249,6 +1249,7 @@ export default function CrearComprasAlertasPage() {
 
       const existingProviderOrder = Object.entries(comprasData || {}).find(
         ([, raw]: [string, any]) => {
+          if ((raw?.bodegaId || BODEGA_PRINCIPAL_ID) !== bodegaCompraId) return false;
           const estado = normalizeText(
             raw?.estado || raw?.estadoCalculado,
           ).toLowerCase();
@@ -1342,6 +1343,7 @@ export default function CrearComprasAlertasPage() {
 
         await update(ref(realtimeDb, `COMPRAS_BODEGA/${existingId}`), {
           itemsCompra: [...currentItems, ...newItems],
+          bodegaId: bodegaCompraId,
           actualizadoAt: now,
           actualizadoPorUid: creadoPorUid,
           actualizadoPorEmail: creadoPorEmail,
