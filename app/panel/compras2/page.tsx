@@ -2247,13 +2247,13 @@ export default function CrearComprasAlertasPage() {
               {detalleProductoOpen && <div className="space-y-3">
                 <button type="button" onClick={() => setDetalleProductoOpen(false)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-[#244C5A]"><ArrowLeft size={15}/> {modalMode === "manual" ? "Volver a proveedores y productos" : "Volver a la lista de productos"}</button>
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"><p className="text-[11px] font-bold uppercase text-emerald-700">Producto seleccionado · {bodegasCompra.find(b => b.id === bodegaCompraId)?.nombre}</p><p className="mt-1 text-sm font-black text-slate-900">{modalMode === "manual" ? selectedGeneralProduct?.producto : selectedAlert?.producto}</p></div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {selectedModalMockupUrl && (
-                  <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="sm:col-span-2 xl:col-span-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setSelectedMockup(selectedModalMockupUrl)}
-                      className="h-24 w-24 shrink-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center cursor-zoom-in"
+                      className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center cursor-zoom-in"
                       title="Ampliar mockup"
                     >
                       <img
@@ -2266,9 +2266,7 @@ export default function CrearComprasAlertasPage() {
                       <p className="text-xs font-black uppercase tracking-wide text-slate-500">
                         Mockup del producto seleccionado
                       </p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        Úsalo para confirmar visualmente que el producto a pedir es el correcto. Haz clic sobre la imagen para ampliarla.
-                      </p>
+                      <p className="text-xs text-slate-500 mt-1">Haz clic para ampliar la imagen.</p>
                     </div>
                   </div>
                 )}
@@ -2316,10 +2314,10 @@ export default function CrearComprasAlertasPage() {
                   }
                 />
 
-                <div>
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <label className="block text-sm font-black text-slate-700">
-                      # cajas / pacas
+                <div className="sm:col-span-1 xl:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <label className="block text-xs font-black uppercase tracking-wide text-emerald-800">
+                      Cantidad · cajas / pacas
                     </label>
                     {cajasPacasSugeridas && !cajasPacas && (
                       <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 text-xs font-black">
@@ -2336,23 +2334,18 @@ export default function CrearComprasAlertasPage() {
                         ? `Sugerido ${cajasPacasSugeridas}; debes digitarlo manualmente`
                         : "Ej: 5"
                     }
-                    className={`w-full rounded-2xl border-2 px-4 py-4 text-2xl font-black outline-none focus:bg-white focus:ring-4 ${
-                      cajasPacas
-                        ? "border-red-300 bg-red-50 text-red-800 focus:border-red-500 focus:ring-red-200"
-                        : "border-emerald-300 bg-emerald-50 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-200"
-                    }`}
+                    className="w-full rounded-lg border-2 border-emerald-300 bg-white px-3 py-2.5 text-xl font-black text-emerald-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200"
                   />
-                  <p className="text-xs text-slate-500 mt-2">
-                    El valor verde es solo sugerido. Para comprar debes digitar
-                    manualmente las cajas/pacas.
+                  <p className="text-[11px] text-emerald-800/80 mt-1.5">
+                    Ingresa manualmente la cantidad. El sugerido no se aplica automáticamente.
                   </p>
                 </div>
 
-                <ReadOnlyField
-                  label="Total"
-                  value={cajasPacas ? formatNumber(totalModal) : ""}
-                  placeholder="Unidad de empaque × cajas/pacas"
-                />
+                <div className="sm:col-span-1 xl:col-span-2 flex flex-col justify-center rounded-xl border border-[#244C5A]/20 bg-[#244C5A] p-4 text-white">
+                  <p className="text-xs font-bold uppercase tracking-wide text-white/70">Total de unidades a comprar</p>
+                  <p className="mt-1 text-3xl font-black tabular-nums">{cajasPacas ? formatNumber(totalModal) : "—"}</p>
+                  <p className="mt-1 text-[11px] text-white/70">Unidad de empaque × cajas / pacas</p>
+                </div>
                 </div>
               </div>}
 
@@ -2773,7 +2766,7 @@ function ReadOnlyField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-bold text-slate-700 mb-2">
+      <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">
         {label}
       </label>
       <input
@@ -2781,7 +2774,7 @@ function ReadOnlyField({
         value={value}
         disabled
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-[#244C5A]/20 bg-[#244C5A]/5 px-4 py-3 font-bold text-[#244C5A] outline-none cursor-not-allowed"
+        className="w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold text-[#244C5A] outline-none cursor-not-allowed"
       />
     </div>
   );
