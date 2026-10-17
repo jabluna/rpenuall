@@ -440,6 +440,7 @@ export default function CrearComprasAlertasPage() {
   const [items, setItems] = useState<CompraItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [detalleProductoOpen, setDetalleProductoOpen] = useState(false);
+  const [previewOrdenOpen, setPreviewOrdenOpen] = useState(false);
   const [duplicateOrderModal, setDuplicateOrderModal] =
     useState<DuplicateOrderModalState>(null);
   const [modalMode, setModalMode] = useState<"alerta" | "manual">("alerta");
@@ -969,6 +970,7 @@ export default function CrearComprasAlertasPage() {
     setAlertSearch("");
     setModalOpen(false);
     setDetalleProductoOpen(false);
+    setPreviewOrdenOpen(false);
   };
 
   const openNewItemModal = (alertaId = "") => {
@@ -1004,6 +1006,7 @@ export default function CrearComprasAlertasPage() {
     const item = items[index];
     if (!item) return;
 
+    setPreviewOrdenOpen(false);
     setEditingItemIndex(index);
     setModalMode(item.origen || (item.alertaId ? "alerta" : "manual"));
     setSelectedAlertId(item.alertaId || "");
@@ -1419,6 +1422,7 @@ export default function CrearComprasAlertasPage() {
       });
       setConsecutivo(normalizeOrderNumber((maxNumber || 0) + 1));
       setDuplicateOrderModal(null);
+      setPreviewOrdenOpen(false);
       resetModal();
     } catch (err: any) {
       setError(
@@ -1537,23 +1541,23 @@ export default function CrearComprasAlertasPage() {
             </div>
           )}
 
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-white p-3">
-            <Boxes size={20} className="text-emerald-700" />
-            <label htmlFor="bodega-compra" className="text-sm font-bold text-slate-700">Bodega para consultar y comprar</label>
-            <select id="bodega-compra" value={bodegaCompraId} onChange={e => {setBodegaCompraId(e.target.value);setItems([]);setSelectedAlertId("");setSelectedGeneralId("");setQuickPage(1);}} className="min-w-[220px] flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold">
+          <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border-2 border-emerald-500 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 p-4 shadow-md shadow-emerald-900/10">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm"><Boxes size={23} /></span>
+            <label htmlFor="bodega-compra" className="text-sm font-black uppercase tracking-wide text-emerald-900">Seleccionar bodega para compras</label>
+            <select id="bodega-compra" value={bodegaCompraId} onChange={e => {setBodegaCompraId(e.target.value);setItems([]);setSelectedAlertId("");setSelectedGeneralId("");setQuickPage(1);}} className="min-w-[220px] flex-1 rounded-xl border-2 border-emerald-300 bg-white px-4 py-3 text-base font-black text-[#244C5A] shadow-sm outline-none focus:ring-2 focus:ring-emerald-400">
               {bodegasCompra.map(b => <option key={b.id} value={b.id}>{b.nombre} ({b.id})</option>)}
             </select>
             <span className="text-xs text-slate-500">Las existencias y listas corresponden a la bodega seleccionada.</span>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <section className="bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-5 sm:px-6 py-5 border-b border-slate-200">
+              <div className="px-5 sm:px-6 py-5 border-b-2 border-rose-200 bg-gradient-to-r from-rose-50 to-white">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">
+                  <p className="text-xs font-black uppercase tracking-wide text-rose-700">
                     Orden de compra
                   </p>
-                  <h2 className="text-xl font-black mt-1">
-                    Productos en alerta para comprar
+                  <h2 className="text-xl sm:text-2xl font-black mt-1 text-rose-900">
+                    <AlertTriangle size={23} className="inline-block mr-2 align-middle text-rose-600" />Productos en alerta para comprar
                   </h2>
                 </div>
               </div>
@@ -1756,13 +1760,13 @@ export default function CrearComprasAlertasPage() {
           </div>
 
           <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 sm:px-6 py-5 border-b border-slate-200">
+            <div className="px-5 sm:px-6 py-5 border-b-2 border-sky-200 bg-gradient-to-r from-sky-50 to-white">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">
+                <p className="text-xs font-black uppercase tracking-wide text-sky-700">
                   Orden de compra manual
                 </p>
-                <h3 className="text-xl font-black text-slate-900 mt-1">
-                  Productos para comprar sin alerta
+                <h3 className="text-xl sm:text-2xl font-black text-sky-900 mt-1">
+                  <ShoppingCart size={23} className="inline-block mr-2 align-middle text-sky-700" />Productos para comprar sin alerta
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">
                   Compra directa desde PROVEEDORES. Los productos se agregan y
@@ -2436,26 +2440,52 @@ export default function CrearComprasAlertasPage() {
                     ? "Actualizar producto"
                     : "Agregar a la orden"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleSaveCompra(modalMode)}
-                  disabled={
-                    saving ||
-                    loadingCompra ||
-                    (modalMode === "alerta"
-                      ? alertItems.length === 0
-                      : manualItems.length === 0)
-                  }
-                  className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
-                >
-                  {saving ? (
-                    <Loader2 className="animate-spin" size={19} />
-                  ) : (
-                    <Save size={19} />
-                  )}
-                  {saving ? "Creando..." : "Crear orden de compra"}
+                <button type="button" onClick={() => setPreviewOrdenOpen(true)}
+                  disabled={saving || loadingCompra || modalItems.length === 0}
+                  className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                  <Eye size={19} /> Previsualizar orden ({modalItems.length})
                 </button>
               </div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewOrdenOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/70 p-3 sm:p-5" onMouseDown={e => {if(e.target === e.currentTarget && !saving)setPreviewOrdenOpen(false)}}>
+          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b bg-slate-50 p-4 sm:p-5">
+              <div><p className="text-xs font-black uppercase tracking-wide text-emerald-700">Revisión antes de guardar</p>
+                <h3 className="mt-1 text-xl font-black text-slate-900">Previsualización de orden de compra</h3>
+                <p className="mt-1 text-xs text-slate-500">Esta vista no guarda nada. Verifica productos y cantidades antes de confirmar.</p></div>
+              <button type="button" disabled={saving} onClick={() => setPreviewOrdenOpen(false)} className="rounded-lg bg-slate-200 p-2" aria-label="Cerrar previsualización"><X size={19}/></button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-500">Bodega</p><p className="font-black">{bodegasCompra.find(b=>b.id===bodegaCompraId)?.nombre || bodegaCompraId}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-500">Tipo de compra</p><p className="font-black">{modalMode === "alerta" ? "Productos en alerta" : "Compra sin alerta"}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-500">Fecha</p><p className="font-black">{modalMode === "alerta" ? fecha : manualFecha}</p></div>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="bg-[#244C5A] text-white"><tr><th className="p-3">Código / Producto</th><th className="p-3">Proveedor</th><th className="p-3 text-right">Cajas / Pacas</th><th className="p-3 text-right">Total unidades</th><th className="p-3 text-center">Corregir</th></tr></thead>
+                  <tbody>{modalItems.map(({item,index}) => <tr key={index} className="border-t border-slate-200">
+                    <td className="p-3"><p className="font-black text-slate-900">{item.codigoProducto}</p><p className="text-xs text-slate-600">{item.producto}</p><p className="text-[11px] text-slate-400">Empaque: {item.unidadEmpaque}</p></td>
+                    <td className="p-3 text-xs">{item.proveedor}</td>
+                    <td className="p-3 text-right font-bold tabular-nums">{item.cajasPacas}</td>
+                    <td className="p-3 text-right font-black tabular-nums">{formatNumber(item.totalComprar)}</td>
+                    <td className="p-3 text-center"><button type="button" onClick={() => openEditItemModal(index)} className="rounded-lg border border-sky-200 px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-50">Editar</button></td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <span className="font-black text-emerald-900">{modalItems.length} producto(s)</span>
+                <span className="text-lg font-black text-emerald-900">Total unidades: {formatNumber(modalItems.reduce((sum,{item})=>sum+item.totalComprar,0))}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 border-t bg-white p-4">
+              <button type="button" disabled={saving} onClick={() => setPreviewOrdenOpen(false)} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700">Volver y corregir</button>
+              <button type="button" disabled={saving || loadingCompra || modalItems.length === 0} onClick={() => handleSaveCompra(modalMode)} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white hover:bg-emerald-700 disabled:opacity-50">{saving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>} {saving ? "Creando..." : "Confirmar y crear orden"}</button>
             </div>
           </div>
         </div>
