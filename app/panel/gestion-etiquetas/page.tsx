@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { onValue, ref, set } from "firebase/database";
+import { get, onValue, ref, runTransaction, set, update } from "firebase/database";
 import {
   getDownloadURL,
   getStorage,
@@ -123,6 +123,9 @@ type CompraDetalleItem = {
   tipoEmpaque?: string;
   cajasPacas?: string | number;
   total?: string | number;
+  cantidadComprar?: string | number;
+  totalUnidades?: string | number;
+  productKey?: string;
   stock?: string | number;
   codigoCliente?: string;
   cliente?: string;
@@ -578,6 +581,9 @@ export default function GestionComprasEtiquetasPage() {
     }
   };
 
+  const cantidadSolicitada = (item: CompraDetalleItem) =>
+    Number(item.cantidadComprar ?? item.totalUnidades ?? item.total ?? 0) || 0;
+
   const guardarGestion = async () => {
     setSaving(true);
     setError("");
@@ -585,10 +591,85 @@ export default function GestionComprasEtiquetasPage() {
 
     try {
       await set(ref(dbRealtime, "GESTION_COMPRAS_ETIQUETAS"), gestion);
-      setMessage("Gestión de compras etiquetas guardada correctamente.");
-      // La actualización se refleja automáticamente por onValue().
+      const completadas: string[] = [];
+      for (const compra of compras) {
+        if (compra.estado === "anulada" || !compra.items?.length) continue;
+        const gestionActual = gestion[compra.id];
+        const lista = compra.items;
+        const todoAceptado = lista.every((item, index) =>
+          procesos.every(proceso =>
+            gestionActual?.estados?.[itemKey(item, index)]?.[proceso.key]?.estado === "aceptado"
+          )
+        );
+        if (!todoAceptado) continue;
+
+        // Buscar claves reales de Firebase, no asumir que los códigos comerciales son las claves del nodo.
+        const snapshot = await get(ref(dbRealtime, "ETIQUETAS/CLIENTES"));
+        const clientesNode = snapshot.val() || {};
+        const referencias: Array<{clienteId:string;productoId:string;lado:"frente"|"dorso";cantidad:number;index:number}> = [];
+        for (let index = 0; index < lista.length; index++) {
+          const item = lista[index];
+          const cantidad = cantidadSolicitada(item);
+          const lado = String(item.lado || "").toLowerCase();
+          if (!Number.isFinite(cantidad) || cantidad <= 0 || (lado !== "frente" && lado !== "dorso")) {
+            throw new Error(`La etiqueta ${index + 1} de la orden ${compra.consecutivo} no tiene cantidad o lado válido.`);
+          }
+          const cliente = Object.entries(clientesNode as Record<string,any>).find(([id,node]) =>
+            String(node?.codigoCliente || id).trim() === String(item.codigoCliente || item.clienteCodigo || "").trim()
+          );
+          const producto = cliente && Object.entries((cliente[1] as any)?.productos || {}).find(([id,node]:[string,any]) =>
+            String(node?.codigo || id).trim() === String(item.codigoProducto || "").trim()
+          );
+          if (!cliente || !producto) throw new Error(`No se encontró en inventario la etiqueta ${item.codigoProducto} del cliente ${item.codigoCliente}.`);
+          referencias.push({clienteId:cliente[0],productoId:producto[0],lado:lado as "frente"|"dorso",cantidad,index});
+        }
+
+        for (const entrada of referencias) {
+          const item = lista[entrada.index];
+          const productoRef = ref(dbRealtime, `ETIQUETAS/CLIENTES/${entrada.clienteId}/productos/${entrada.productoId}`);
+          const movimientoId = `compra_${compra.id.replace(/[^a-zA-Z0-9_-]/g, "_")}_${entrada.index}`;
+          const resultado = await runTransaction(productoRef, (actual:any) => {
+            if (!actual) return;
+            const movimientos = actual.detalle?.[entrada.lado]?.movimientos || {};
+            if (movimientos[movimientoId]) return;
+            const stockActual = Number(actual.stock?.[entrada.lado] ?? 0) || 0;
+            const nuevoSaldo = stockActual + entrada.cantidad;
+            return {
+              ...actual,
+              stock: { ...(typeof actual.stock === "object" && actual.stock ? actual.stock : {}), [entrada.lado]: nuevoSaldo },
+              detalle: {
+                ...(actual.detalle || {}),
+                [entrada.lado]: {
+                  ...(actual.detalle?.[entrada.lado] || {}),
+                  movimientos: {
+                    ...movimientos,
+                    [movimientoId]: {
+                      fecha: new Date().toISOString().slice(0,10),
+                      operacion: `COMPRA · ${compra.consecutivo || compra.id}`,
+                      descripcion: `COMPRA · ${compra.consecutivo || compra.id}`,
+                      ingreso: entrada.cantidad,
+                      salida: null,
+                      saldo: nuevoSaldo,
+                      createdAt: Date.now(),
+                    },
+                  },
+                },
+              },
+            };
+          }, {applyLocally:false});
+          if (!resultado.committed && !resultado.snapshot.exists()) throw new Error(`No fue posible registrar el ingreso de ${item.codigoProducto}.`);
+        }
+        await update(ref(dbRealtime, `COMPRAS_ETIQUETAS/${compra.id}`), {
+          estado: "completado",
+          actualizadoAt: new Date().toISOString(),
+        });
+        completadas.push(String(compra.consecutivo || compra.id));
+      }
+      setMessage(completadas.length
+        ? `Gestión guardada. Compras ingresadas a inventario: ${completadas.join(", ")}.`
+        : "Gestión de compras etiquetas guardada correctamente.");
     } catch (err: any) {
-      setError(`No fue posible guardar la gestión. ${err?.message || ""}`);
+      setError(`No fue posible completar la gestión o el ingreso a inventario. ${err?.message || ""}`);
     } finally {
       setSaving(false);
     }
@@ -787,7 +868,7 @@ export default function GestionComprasEtiquetasPage() {
                 <table className="w-full min-w-[1180px] border-collapse text-sm">
                   <thead>
                     <tr className="bg-emerald-50 border-b border-emerald-200">
-                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[250px]">
+                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[170px]">
                         Fecha / evidencia de compra
                       </th>
                       <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[210px]">
@@ -901,7 +982,7 @@ export default function GestionComprasEtiquetasPage() {
                                       {primerItem.cliente || primerItem.clienteNombre || primerItem.codigoCliente || "Sin cliente"}
                                     </strong>{" "}
                                     · Compra:{" "}
-                                    <strong>{primerItem.total || 0}</strong>
+                                    <strong>{cantidadSolicitada(primerItem)}</strong>
                                   </p>
                                 </div>
                               ) : (
@@ -997,7 +1078,7 @@ export default function GestionComprasEtiquetasPage() {
                             <strong>
                               {primerItem.cliente || primerItem.clienteNombre || primerItem.codigoCliente || "Sin cliente"}
                             </strong>{" "}
-                            · Compra: <strong>{primerItem.total || 0}</strong>
+                            · Compra: <strong>{cantidadSolicitada(primerItem)}</strong>
                           </p>
                         </div>
                       )}
@@ -1108,7 +1189,7 @@ export default function GestionComprasEtiquetasPage() {
         const items = compra.items || [];
         return (
           <div className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-5">
-            <div className="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex max-h-[94vh] w-full max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-w-[calc(100vw-3rem)]">
               <div className="flex shrink-0 items-center justify-between gap-4 bg-[#244C5A] px-5 py-4 text-white">
                 <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Gestión de compra de etiquetas</p><h3 className="text-xl font-black">Orden {compra.consecutivo}</h3><p className="text-xs text-white/70">{items.length} etiquetas · Verificación individual por proceso</p></div>
                 <button type="button" onClick={() => setDetalleCompraId(null)} className="rounded-xl bg-white/15 p-2.5 hover:bg-white/25" aria-label="Cerrar detalle"><X size={21}/></button>
@@ -1126,19 +1207,19 @@ export default function GestionComprasEtiquetasPage() {
                                     </p>
                                   </div>
                                   <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[1150px] border-collapse">
+                                    <table className="w-full table-fixed border-collapse">
                                       <thead>
                                         <tr className="bg-slate-50 border-b border-slate-200">
                                           <th className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[250px]">
                                             Etiqueta / cliente
                                           </th>
-                                          <th className="text-center px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[110px]">
+                                          <th className="text-center px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[85px]">
                                             Compra
                                           </th>
                                           {procesos.map((proceso) => (
                                             <th
                                               key={`${compra.id}-head-${proceso.key}`}
-                                              className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 min-w-[175px]"
+                                              className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 min-w-0"
                                             >
                                               {proceso.titulo}
                                             </th>
@@ -1153,7 +1234,7 @@ export default function GestionComprasEtiquetasPage() {
                                               key={`${compra.id}-detalle-${key}`}
                                               className="border-b border-slate-100 last:border-b-0 align-top"
                                             >
-                                              <td className="px-3 py-3">
+                                              <td className="px-2 py-3 break-words">
                                                 <p className="font-black text-slate-900">
                                                   {item.codigoEnvase || item.codigoProducto || "Sin código"}
                                                 </p>
@@ -1168,7 +1249,7 @@ export default function GestionComprasEtiquetasPage() {
                                                 </p>
                                               </td>
                                               <td className="px-3 py-3 text-center font-black text-slate-900">
-                                                {item.total || 0}
+                                                {cantidadSolicitada(item)}
                                               </td>
                                               {procesos.map((proceso) => {
                                                 const estado = obtenerEstado(
