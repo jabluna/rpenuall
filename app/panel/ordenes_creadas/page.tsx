@@ -1285,31 +1285,31 @@ export default function OrdenesCreadasPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1040px] border-collapse">
-                  <thead>
+                <table className="w-full table-fixed border-collapse text-xs">
+                  <colgroup><col style={{width:"12%"}}/><col style={{width:"9%"}}/><col style={{width:"15%"}}/><col style={{width:"14%"}}/><col style={{width:"18%"}}/><col style={{width:"11%"}}/><col style={{width:"9%"}}/><col style={{width:"12%"}}/></colgroup><thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Orden
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Fecha
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Cliente
                       </th>
-                      <th className="text-center px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-center px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Productos
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Responsable de producción
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Estado
                       </th>
-                      <th className="text-center px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-center px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Eliminar orden
                       </th>
-                      <th className="text-right px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-right px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Acciones
                       </th>
                     </tr>
@@ -1321,8 +1321,8 @@ export default function OrdenesCreadasPage() {
                         key={pedido.id}
                         className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
                       >
-                        <td className="px-5 py-4">
-                          <p className="font-black text-slate-900">
+                        <td className="px-2 py-2">
+                          <p className="break-words font-bold text-slate-900">
                             {pedido.ordenPedido}
                           </p>
                           <p className="text-xs text-slate-500">
@@ -1330,11 +1330,11 @@ export default function OrdenesCreadasPage() {
                           </p>
                         </td>
 
-                        <td className="px-5 py-4 text-slate-600">
+                        <td className="px-2 py-2 text-slate-600">
                           {pedido.fecha}
                         </td>
 
-                        <td className="px-5 py-4">
+                        <td className="px-2 py-2">
                           <p className="font-black text-slate-900">
                             {pedido.cliente?.codigo_cliente}
                           </p>
@@ -1343,18 +1343,18 @@ export default function OrdenesCreadasPage() {
                           </p>
                         </td>
 
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-2 py-2 text-center">
                           <button
                             type="button"
                             onClick={() => setPedidoProductosModal(pedido)}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#244C5A]/10 text-[#244C5A] px-4 py-2 text-sm font-black hover:bg-[#244C5A] hover:text-white transition"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#244C5A]/10 text-[#244C5A] px-2 py-1.5 text-xs font-bold hover:bg-[#244C5A] hover:text-white transition"
                           >
                             <Eye size={17} />
-                            Ver productos ({pedido.items?.length || 0})
+                            {pedido.items?.length || 0} productos
                           </button>
                         </td>
 
-                        <td className="px-5 py-4">
+                        <td className="px-2 py-2">
                           {(() => {
                             const responsablePlanta =
                               obtenerResponsableProduccion(pedido);
@@ -1383,7 +1383,7 @@ export default function OrdenesCreadasPage() {
                           })()}
                         </td>
 
-                        <td className="px-5 py-4">
+                        <td className="px-2 py-2">
                           {(() => {
                             const estadoOrden = calcularEstadoOrden(pedido);
 
@@ -1399,12 +1399,12 @@ export default function OrdenesCreadasPage() {
                           })()}
                         </td>
 
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-2 py-2 text-center">
                           <button
                             type="button"
                             onClick={() => eliminarOrden(pedido)}
                             disabled={deletingPedidoId === pedido.id}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-black text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Eliminar orden"
                           >
                             {deletingPedidoId === pedido.id ? (
@@ -1416,12 +1416,12 @@ export default function OrdenesCreadasPage() {
                           </button>
                         </td>
 
-                        <td className="px-5 py-4">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-2 py-2">
+                          <div className="flex flex-nowrap items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => generarPdfResumenOrden(pedido)}
-                              className="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition"
+                              className="rounded-lg bg-slate-100 px-2 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition"
                               title="Ver resumen de la orden en PDF"
                             >
                               <FileText size={17} />
@@ -1431,7 +1431,7 @@ export default function OrdenesCreadasPage() {
                             <button
                               type="button"
                               onClick={() => setPedidoProductosModal(pedido)}
-                              className="rounded-2xl bg-[#244C5A] px-4 py-2 text-sm font-black text-white hover:bg-[#1b3b46] flex items-center gap-2 transition"
+                              className="rounded-lg bg-[#244C5A] px-2 py-1.5 text-xs font-bold text-white hover:bg-[#1b3b46] flex items-center gap-2 transition"
                             >
                               <Eye size={17} />
                               Estado
@@ -1448,7 +1448,7 @@ export default function OrdenesCreadasPage() {
         </section>
         {pedidoProductosModal && (
           <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center px-2 sm:px-4 py-3 sm:py-6">
-            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl w-full max-w-[98vw] max-h-[94vh] overflow-hidden flex flex-col">
+            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
               <div className="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-bold text-[#244C5A] uppercase tracking-wide">
@@ -1498,11 +1498,11 @@ export default function OrdenesCreadasPage() {
               </div>
 
               <div className="p-3 sm:p-6 overflow-auto">
-                <div className="lg:hidden space-y-4">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {(pedidoProductosModal.items || []).map((item, itemIndex) => (
                     <div
                       key={`${item.codigo}-${itemIndex}-mobile`}
-                      className="rounded-3xl border border-slate-200 overflow-hidden bg-white"
+                      className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white"
                     >
                       <div className="p-4 bg-slate-50 border-b border-slate-200">
                         <p className="font-black text-slate-900">
@@ -1612,7 +1612,7 @@ export default function OrdenesCreadasPage() {
                         </div>
                       </div>
 
-                      <div className="p-3 space-y-3">
+                      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
                         {procesos.map((proceso) => {
                           const estado =
                             item.procesos?.[proceso.key] || "sin_verificar";
@@ -1621,7 +1621,7 @@ export default function OrdenesCreadasPage() {
                           return (
                             <div
                               key={`${item.codigo}-${proceso.key}-mobile`}
-                              className="rounded-2xl border border-slate-200 p-3"
+                              className="min-w-0 rounded-lg border border-slate-200 p-3"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
@@ -1696,211 +1696,6 @@ export default function OrdenesCreadasPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-
-                <div className="hidden lg:block overflow-auto">
-                  <table className="w-full min-w-[2950px] border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="sticky left-0 z-20 bg-slate-50 text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 min-w-[120px]">
-                          Código
-                        </th>
-                        <th className="sticky left-[120px] z-20 bg-slate-50 text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 min-w-[260px]">
-                          Producto
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 min-w-[100px]">
-                          Cantidad
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 min-w-[150px]">
-                          Consecutivo
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 min-w-[150px]">
-                          Planta
-                        </th>
-
-                        {procesos.map((proceso) => (
-                          <th
-                            key={proceso.key}
-                            className="px-3 py-3 text-center text-xs font-black uppercase tracking-wide text-slate-500 min-w-[155px]"
-                          >
-                            <div>{proceso.titulo}</div>
-                            <div className="text-[10px] text-slate-400 normal-case">
-                              {proceso.rol}
-                            </div>
-                          </th>
-                        ))}
-
-                        <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-500 min-w-[220px]">
-                          Responsable producción
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {(pedidoProductosModal.items || []).map(
-                        (item, itemIndex) => (
-                          <tr
-                            key={`${item.codigo}-${itemIndex}`}
-                            className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
-                          >
-                            <td className="sticky left-0 z-10 bg-white px-4 py-4 font-black text-slate-900 min-w-[120px]">
-                              {item.codigo}
-                            </td>
-
-                            <td className="sticky left-[120px] z-10 bg-white px-4 py-4 text-slate-600 min-w-[260px] max-w-[260px]">
-                              {item.producto}
-                            </td>
-
-                            <td className="px-4 py-4 text-center font-black">
-                              {item.cantidad}
-                            </td>
-
-                            <td className="px-4 py-4 text-center">
-                              <input
-                                type="text"
-                                value={item.consecutivo || ""}
-                                onChange={(event) => {
-                                  const value = event.target.value;
-                                  setPedidoProductosModal((current) => {
-                                    if (!current) return current;
-                                    return {
-                                      ...current,
-                                      items: (current.items || []).map(
-                                        (currentItem, i) =>
-                                          i === itemIndex
-                                            ? {
-                                                ...currentItem,
-                                                consecutivo: value,
-                                              }
-                                            : currentItem,
-                                      ),
-                                    };
-                                  });
-                                }}
-                                className="w-32 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center font-black outline-none focus:bg-white focus:border-[#244C5A]"
-                                placeholder="Manual"
-                              />
-                            </td>
-
-                            <td className="px-4 py-4 text-center">
-                              <select
-                                value={item.planta || ""}
-                                onChange={(event) =>
-                                  actualizarPlantaModal(
-                                    itemIndex,
-                                    event.target.value,
-                                  )
-                                }
-                                className="w-36 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black outline-none focus:bg-white focus:border-[#244C5A]"
-                              >
-                                <option value="">Sin asignar</option>
-                                {plantasProduccion.map((planta) => (
-                                  <option key={planta} value={planta}>
-                                    {planta}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-
-                            {procesos.map((proceso) => {
-                              const estado =
-                                item.procesos?.[proceso.key] || "sin_verificar";
-                              const meta = item.estadosMeta?.[proceso.key];
-
-                              return (
-                                <td
-                                  key={proceso.key}
-                                  className="px-3 py-4 text-center align-top"
-                                >
-                                  <select
-                                    value={estado}
-                                    onChange={(event) =>
-                                      solicitarCambioEstado(
-                                        itemIndex,
-                                        proceso.key,
-                                        event.target.value as EstadoProceso,
-                                      )
-                                    }
-                                    className={`w-full rounded-2xl border px-3 py-2 text-xs font-black outline-none ${estadoSelectClass(
-                                      estado,
-                                    )}`}
-                                  >
-                                    <option value="sin_verificar">
-                                      Sin verificar
-                                    </option>
-                                    <option value="aceptado">Aceptado</option>
-                                    <option value="rechazado">Rechazado</option>
-                                  </select>
-
-                                  {meta && (
-                                    <div className="mt-2 text-[10px] text-slate-500 leading-4 text-left">
-                                      <p className="font-bold truncate">
-                                        {meta.usuario}
-                                      </p>
-                                      <p>{formatoFechaHora(meta.fecha)}</p>
-                                      {meta.rol && <p>Rol: {meta.rol}</p>}
-                                    </div>
-                                  )}
-
-                                  {obtenerHistorialRechazos(item, proceso.key)
-                                    .length > 0 && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        abrirVistaRechazo(
-                                          proceso.titulo,
-                                          obtenerHistorialRechazos(
-                                            item,
-                                            proceso.key,
-                                          ),
-                                        )
-                                      }
-                                      className="mt-2 text-[10px] text-red-600 font-black underline"
-                                    >
-                                      Ver rechazo
-                                    </button>
-                                  )}
-                                </td>
-                              );
-                            })}
-
-                            <td className="px-4 py-4 text-xs text-slate-600 min-w-[220px] align-top">
-                              {(() => {
-                                const responsablePlanta =
-                                  obtenerResponsableProduccion(
-                                    pedidoProductosModal,
-                                  );
-
-                                if (!responsablePlanta) {
-                                  return (
-                                    <span className="inline-flex rounded-full bg-slate-100 text-slate-500 px-3 py-1 text-xs font-black">
-                                      Aún no hay responsable de producción
-                                    </span>
-                                  );
-                                }
-
-                                return (
-                                  <div>
-                                    <p className="font-black text-slate-900">
-                                      {responsablePlanta.usuario}
-                                    </p>
-                                    <p className="text-slate-500 mt-1">
-                                      Rol: {responsablePlanta.rol}
-                                    </p>
-                                    <p className="text-slate-400 mt-1">
-                                      {formatoFechaHora(
-                                        responsablePlanta.fecha,
-                                      )}
-                                    </p>
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
                 </div>
 
                 {(pedidoProductosModal.items || []).length === 0 && (
