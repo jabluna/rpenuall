@@ -1286,7 +1286,7 @@ export default function OrdenesCreadasPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed border-collapse text-xs">
-                  <colgroup><col style={{width:"12%"}}/><col style={{width:"9%"}}/><col style={{width:"15%"}}/><col style={{width:"14%"}}/><col style={{width:"18%"}}/><col style={{width:"11%"}}/><col style={{width:"9%"}}/><col style={{width:"12%"}}/></colgroup><thead>
+                  <colgroup><col style={{width:"12%"}}/><col style={{width:"9%"}}/><col style={{width:"15%"}}/><col style={{width:"14%"}}/><col style={{width:"18%"}}/><col style={{width:"11%"}}/><col style={{width:"21%"}}/></colgroup><thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Orden
@@ -1305,9 +1305,6 @@ export default function OrdenesCreadasPage() {
                       </th>
                       <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Estado
-                      </th>
-                      <th className="text-center px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
-                        Eliminar orden
                       </th>
                       <th className="text-right px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Acciones
@@ -1399,25 +1396,11 @@ export default function OrdenesCreadasPage() {
                           })()}
                         </td>
 
-                        <td className="px-2 py-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => eliminarOrden(pedido)}
-                            disabled={deletingPedidoId === pedido.id}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                            title="Eliminar orden"
-                          >
-                            {deletingPedidoId === pedido.id ? (
-                              <Loader2 className="animate-spin" size={17} />
-                            ) : (
-                              <Trash2 size={17} />
-                            )}
-                            Eliminar
-                          </button>
-                        </td>
-
                         <td className="px-2 py-2">
                           <div className="flex flex-nowrap items-center justify-end gap-1">
+                            <button type="button" onClick={() => eliminarOrden(pedido)} disabled={deletingPedidoId === pedido.id} title="Eliminar orden (solicita confirmación)" aria-label={`Eliminar orden ${pedido.ordenPedido}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50">
+                              {deletingPedidoId === pedido.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                            </button>
                             <button
                               type="button"
                               onClick={() => generarPdfResumenOrden(pedido)}
@@ -1448,7 +1431,7 @@ export default function OrdenesCreadasPage() {
         </section>
         {pedidoProductosModal && (
           <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center px-2 sm:px-4 py-3 sm:py-6">
-            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-2xl w-full max-w-[min(96vw,1800px)] max-h-[92vh] overflow-hidden flex flex-col">
               <div className="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-bold text-[#244C5A] uppercase tracking-wide">
@@ -1498,7 +1481,7 @@ export default function OrdenesCreadasPage() {
               </div>
 
               <div className="p-3 sm:p-6 overflow-auto">
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {(pedidoProductosModal.items || []).map((item, itemIndex) => (
                     <div
                       key={`${item.codigo}-${itemIndex}-mobile`}
@@ -1512,7 +1495,7 @@ export default function OrdenesCreadasPage() {
                           {item.producto}
                         </p>
 
-                        <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div className="grid grid-cols-2 gap-2 mt-3">
                           <div>
                             <p className="text-[11px] uppercase font-black text-slate-400">
                               Cantidad
@@ -1612,7 +1595,7 @@ export default function OrdenesCreadasPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 xl:grid-cols-4">
                         {procesos.map((proceso) => {
                           const estado =
                             item.procesos?.[proceso.key] || "sin_verificar";
