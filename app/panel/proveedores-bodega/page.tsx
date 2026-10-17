@@ -2916,7 +2916,7 @@ export default function ProveedoresBodegaPage() {
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     {editingMovementId ? "Editando movimiento" : "Actualización rápida"}
                   </p>
-                  <h2 className="text-2xl font-black mt-1">
+                  <h2 className="mt-1 inline-flex items-center rounded-xl border-l-4 border-teal-500 bg-teal-50 px-4 py-2 text-xl font-black tracking-tight text-[#244C5A] sm:text-2xl">
                     {editingMovementId ? "Corregir movimiento" : "Registrar nuevo movimiento"}
                   </h2>
                 </div>
@@ -3148,7 +3148,7 @@ export default function ProveedoresBodegaPage() {
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     Tercera capa
                   </p>
-                  <h2 className="text-2xl font-black mt-1">
+                  <h2 className="mt-1 inline-flex items-center rounded-xl border-l-4 border-indigo-500 bg-indigo-50 px-4 py-2 text-xl font-black tracking-tight text-indigo-900 sm:text-2xl">
                     Historial de movimientos
                   </h2>
                   <p className="text-slate-500 text-sm mt-1">
