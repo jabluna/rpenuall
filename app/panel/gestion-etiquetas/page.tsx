@@ -631,7 +631,7 @@ export default function GestionComprasEtiquetasPage() {
           const resultado = await runTransaction(productoRef, (actual:any) => {
             if (!actual) return;
             const movimientos = actual.detalle?.[entrada.lado]?.movimientos || {};
-            if (movimientos[movimientoId]) return;
+            if (movimientos[movimientoId]) return actual;
             const stockActual = Number(actual.stock?.[entrada.lado] ?? 0) || 0;
             const nuevoSaldo = stockActual + entrada.cantidad;
             return {
@@ -657,7 +657,7 @@ export default function GestionComprasEtiquetasPage() {
               },
             };
           }, {applyLocally:false});
-          if (!resultado.committed && !resultado.snapshot.exists()) throw new Error(`No fue posible registrar el ingreso de ${item.codigoProducto}.`);
+          if (!resultado.snapshot.exists()) throw new Error(`No fue posible registrar el ingreso de ${item.codigoProducto}: producto inexistente.`);
         }
         await update(ref(dbRealtime, `COMPRAS_ETIQUETAS/${compra.id}`), {
           estado: "completado",
@@ -824,8 +824,6 @@ export default function GestionComprasEtiquetasPage() {
               </p>
               <h2 className="text-2xl font-black mt-1">Compras de etiquetas</h2>
               <p className="text-slate-500 text-sm mt-1">
-                Vista tipo Excel: se muestran las 10 últimas compras por página.
-                Cada fila se despliega para revisar producto por producto. La evidencia se toma de la orden de compra de etiquetas creada en la pantalla anterior.
               </p>
             </div>
 
@@ -864,14 +862,14 @@ export default function GestionComprasEtiquetasPage() {
             </div>
           ) : (
             <>
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full min-w-[1180px] border-collapse text-sm">
+              <div className="hidden lg:block w-full min-w-0 overflow-hidden">
+                <table className="w-full table-fixed border-collapse text-xs">
                   <thead>
                     <tr className="bg-emerald-50 border-b border-emerald-200">
-                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[170px]">
+                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[20%]">
                         Fecha / evidencia de compra
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[210px]">
+                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[17%]">
                         Consecutivo / estado
                       </th>
                       <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
@@ -880,10 +878,10 @@ export default function GestionComprasEtiquetasPage() {
                       <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[160px]">
                         Productos
                       </th>
-                      <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[190px]">
+                      <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[13%]">
                         Estado
                       </th>
-                      <th className="text-right px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[150px]">
+                      <th className="text-right px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[12%]">
                         Acción
                       </th>
                     </tr>
@@ -899,7 +897,7 @@ export default function GestionComprasEtiquetasPage() {
                       return (
                         <Fragment key={compra.id}>
                           <tr className={`border-b align-top transition ${estaAbierta ? "bg-emerald-50 hover:bg-emerald-50/90 border-emerald-200" : "border-slate-100 hover:bg-slate-50"}`}>
-                            <td className="px-4 py-4">
+                            <td className="px-2 py-3 break-words">
                               <p className="font-black text-slate-900">
                                 {gestionCompra.fechaGestion || hoy()}
                               </p>
@@ -991,7 +989,7 @@ export default function GestionComprasEtiquetasPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-4 text-center">
+                            <td className="px-2 py-3 text-center break-words">
                               <span className="inline-flex rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
                                 {items.length} ítems
                               </span>
@@ -1016,7 +1014,7 @@ export default function GestionComprasEtiquetasPage() {
                                 />
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-right">
+                            <td className="px-2 py-3 text-right">
                               <button
                                 type="button"
                                 onClick={() => setDetalleCompraId(compra.id)}
