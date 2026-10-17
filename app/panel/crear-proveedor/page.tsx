@@ -577,6 +577,8 @@ export default function CrearProveedorPage() {
   const [operationConsecutive, setOperationConsecutive] = useState("");
   const [adjustmentApproved] = useState(false);
 
+  const [proveedorModalOpen, setProveedorModalOpen] = useState(false);
+  const [productoModalOpen, setProductoModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ProviderRow | null>(
     null
   );
@@ -887,6 +889,7 @@ export default function CrearProveedorPage() {
 
     setEditingProvider(provider);
     setForm(provider.datos);
+    setProveedorModalOpen(true);
     setSelectedProvider(null);
     setSelectedProduct(null);
     setError("");
@@ -970,6 +973,7 @@ export default function CrearProveedorPage() {
 
     setEditingProduct(product);
     setProductForm(product.datos);
+    setProductoModalOpen(true);
     setMockupFile(null);
     setMockupPreview(product.mockupUrl || "");
     setError("");
@@ -1314,6 +1318,7 @@ export default function CrearProveedorPage() {
       }
 
       resetForm();
+      setProveedorModalOpen(false);
       await reloadProviders();
     } catch (err: any) {
       setError(`No fue posible guardar el proveedor. ${err?.message || ""}`);
@@ -1405,6 +1410,7 @@ export default function CrearProveedorPage() {
 
       setMessage(editingProduct ? "Producto actualizado correctamente." : "Producto creado correctamente.");
       resetProductForm();
+      setProductoModalOpen(false);
       await reloadProviders();
     } catch (err: any) {
       setError(`No fue posible guardar el producto. ${err?.message || ""}`);
@@ -2348,231 +2354,22 @@ export default function CrearProveedorPage() {
           </>
         ) : selectedProvider ? (
           <>
-            <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
-              <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
-              <div className="absolute right-24 bottom-[-80px] w-56 h-56 rounded-full bg-white/10" />
-
-              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleBackToProviders}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 px-4 py-2 text-sm font-bold transition mb-5"
-                  >
-                    <ArrowLeft size={17} />
-                    Volver a proveedores
-                  </button>
-
-                  <p className="text-sm text-white/65 uppercase tracking-wide font-bold">
-                    {selectedProvider?.codigo}
-                  </p>
-                  <h2 className="text-3xl sm:text-4xl font-black mt-1">
-                    {selectedProvider?.nombre}
-                  </h2>
-                  <p className="text-white/70 mt-2 max-w-3xl">
-                    {selectedProvider?.datos?.DIRECCION || "Sin dirección registrada"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Productos
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {products.length}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Stock total
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeNumber(totalStock)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4 col-span-2 sm:col-span-1">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Valor inventario
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeMoney(totalValorInventario)}
-                    </p>
-                  </div>
-                </div>
+            <section className="mb-5 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                <div className="min-w-0"><p className="text-xs font-black uppercase tracking-wider text-emerald-700">Proveedor · {selectedProvider.codigo}</p><h2 className="text-xl font-black text-[#244C5A]">{selectedProvider.nombre}</h2><p className="mt-1 text-xs text-slate-500">{selectedProvider.datos?.DIRECCION || "Sin dirección registrada"}</p></div>
+                <button type="button" onClick={handleBackToProviders} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-bold text-[#244C5A] hover:bg-slate-100"><ArrowLeft size={17}/> Volver a proveedores</button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-xs font-black uppercase text-emerald-700">Productos</p><p className="mt-1 text-2xl font-black text-emerald-900">{products.length}</p></div>
+                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4"><p className="text-xs font-black uppercase text-sky-700">Stock total</p><p className="mt-1 text-2xl font-black text-sky-900">{normalizeNumber(totalStock)}</p></div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="text-xs font-black uppercase text-amber-700">Valor inventario</p><p className="mt-1 text-2xl font-black text-amber-900">{normalizeMoney(totalValorInventario)}</p></div>
               </div>
             </section>
 
-            <form
-              onSubmit={handleSaveProduct}
-              className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden mb-6"
-            >
-              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
-                <div>
-                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
-                    {editingProduct ? "Editando producto" : "Nuevo producto"}
-                  </p>
-                  <h2 className="text-2xl font-black mt-1">
-                    {editingProduct ? "Actualizar producto" : "Agregar producto al proveedor"}
-                  </h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Segunda capa: datos base del producto. La operación diaria se maneja en movimientos.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {editingProduct && (
-                    <button
-                      type="button"
-                      onClick={resetProductForm}
-                      className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition"
-                    >
-                      Cancelar
-                    </button>
-                  )}
-
-                  {((editingProduct && can("proveedoresBodega", "editar")) ||
-                    (!editingProduct && can("proveedoresBodega", "crear"))) && (
-                    <button
-                      type="submit"
-                      disabled={savingProduct}
-                      className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
-                    >
-                      {savingProduct ? (
-                        <Loader2 className="animate-spin" size={20} />
-                      ) : editingProduct ? (
-                        <Save size={20} />
-                      ) : (
-                        <Plus size={20} />
-                      )}
-                      {savingProduct
-                        ? "Guardando..."
-                        : editingProduct
-                        ? "Actualizar producto"
-                        : "Crear producto"}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Código
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.CODIGO}
-                    onChange={(e) => handleProductChange("CODIGO", e.target.value)}
-                    placeholder="ALI-001"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                  />
-                </div>
-
-                <div className="xl:col-span-2">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Producto
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.PRODUCTO}
-                    onChange={(e) => handleProductChange("PRODUCTO", e.target.value)}
-                    placeholder="Nombre del producto"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Mockup
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <label className="w-full rounded-2xl border border-dashed border-[#244C5A]/35 bg-[#244C5A]/5 px-4 py-3 text-sm font-black text-[#244C5A] hover:bg-[#244C5A]/10 transition cursor-pointer flex items-center justify-center gap-2">
-                      <UploadCloud size={18} />
-                      Adjuntar
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleMockupChange(e.target.files?.[0])}
-                      />
-                    </label>
-
-                    {(mockupPreview || productForm.MOCKUP_URL) && (
-                      <button
-                        type="button"
-                        onClick={removeMockup}
-                        className="w-12 h-12 rounded-2xl border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center transition"
-                        title="Eliminar mockup"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Unidad de empaque
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.UNIDAD_DE_EMPAQUE}
-                    onChange={(e) =>
-                      handleProductChange("UNIDAD_DE_EMPAQUE", e.target.value)
-                    }
-                    placeholder="CAJA, PAQUETE..."
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Costo
-                  </label>
-                  <input
-                    type="number"
-                    value={productForm.COSTO}
-                    onChange={(e) => handleProductChange("COSTO", e.target.value)}
-                    placeholder="0"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Stock inicial
-                  </label>
-                  <input
-                    type="number"
-                    value={editingProduct ? normalizeText(editingProduct.datos.STOCK) : "0"}
-                    disabled
-                    placeholder="0"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 outline-none cursor-not-allowed"
-                  />
-                  <p className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                    El stock no se registra aquí. El ingreso inicial se hace desde el primer movimiento en Proveedores / Bodega.
-                  </p>
-                </div>
-
-                <div className="hidden">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Hoja detalle
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.HOJA_DETALLE}
-                    onChange={(e) =>
-                      handleProductChange("HOJA_DETALLE", e.target.value)
-                    }
-                    placeholder="Referencia hoja o ubicación"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                  />
-                </div>
-              </div>
-            </form>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-700">Catálogo de productos</p><h3 className="text-lg font-black text-[#244C5A]">Productos de {selectedProvider.nombre}</h3></div>
+              {can("proveedoresBodega", "crear") && <button type="button" onClick={() => { resetProductForm(); setProductoModalOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-5 py-3 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Crear producto</button>}
+            </div>
 
             <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -2733,160 +2530,10 @@ export default function CrearProveedorPage() {
           </>
         ) : (
           <>
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden"
-            >
-              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
-                <div>
-                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
-                    {editingProvider ? "Editando proveedor" : "Nuevo proveedor"}
-                  </p>
-                  <h2 className="text-2xl font-black mt-1">
-                    {editingProvider
-                      ? "Actualizar datos del proveedor"
-                      : "Crear proveedor"}
-                  </h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Primera capa conectada al nodo PROVEEDORES de Realtime Database.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-                  {editingProvider && (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition whitespace-nowrap flex items-center justify-center gap-2"
-                    >
-                      <X size={17} />
-                      Cancelar
-                    </button>
-                  )}
-
-                  {canModifyForm && (
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
-                    >
-                      {saving ? (
-                        <Loader2 className="animate-spin" size={20} />
-                      ) : editingProvider ? (
-                        <Save size={20} />
-                      ) : (
-                        <Plus size={20} />
-                      )}
-                      {saving
-                        ? "Guardando..."
-                        : editingProvider
-                        ? "Actualizar proveedor"
-                        : "Crear proveedor"}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Código
-                  </label>
-                  <input
-                    type="text"
-                    value={form.CODIGO}
-                    disabled={!canModifyForm || !!editingProvider}
-                    onChange={(e) => handleChange("CODIGO", e.target.value)}
-                    placeholder="ALI-105"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Proveedor
-                  </label>
-                  <input
-                    type="text"
-                    value={form.PROVEEDOR}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("PROVEEDOR", e.target.value)}
-                    placeholder="ALICO"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={form.EMAIL}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("EMAIL", e.target.value)}
-                    placeholder="proveedor@empresa.com"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    NIT
-                  </label>
-                  <input
-                    type="text"
-                    value={form.NIT}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("NIT", e.target.value)}
-                    placeholder="900000000"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Teléfono
-                  </label>
-                  <input
-                    type="text"
-                    value={form.TELEFONO}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("TELEFONO", e.target.value)}
-                    placeholder="3000000000"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div className="hidden">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Hoja
-                  </label>
-                  <input
-                    type="text"
-                    value={form.HOJA}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("HOJA", e.target.value)}
-                    placeholder="Nombre hoja"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <div className="md:col-span-2 xl:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Dirección
-                  </label>
-                  <input
-                    type="text"
-                    value={form.DIRECCION}
-                    disabled={!canModifyForm}
-                    onChange={(e) => handleChange("DIRECCION", e.target.value)}
-                    placeholder="Dirección proveedor"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-            </form>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-700">Directorio de proveedores</p><h2 className="text-lg font-black text-[#244C5A]">Administración de proveedores</h2></div>
+              {can("proveedoresBodega", "crear") && <button type="button" onClick={() => { resetForm(); setProveedorModalOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-5 py-3 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Crear proveedor</button>}
+            </div>
 
             <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 mt-6 overflow-hidden">
               <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -3069,6 +2716,352 @@ export default function CrearProveedorPage() {
         )}
       </section>
 
+      {proveedorModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-sm" onMouseDown={e => { if (e.target === e.currentTarget && !saving && !savingProduct) { setProveedorModalOpen(false); resetForm(); } }}>
+          <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between bg-gradient-to-r from-[#244C5A] to-emerald-800 px-5 py-4 text-white">
+              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Administración</p><h3 className="text-lg font-black">Crear / editar proveedor</h3></div>
+              <button type="button" onClick={() => { setProveedorModalOpen(false); resetForm(); }} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Cerrar modal"><X size={20}/></button>
+            </div>
+            <div className="min-h-0 overflow-y-auto bg-slate-50 p-3 sm:p-5">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden"
+            >
+              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                <div>
+                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
+                    {editingProvider ? "Editando proveedor" : "Nuevo proveedor"}
+                  </p>
+                  <h2 className="text-2xl font-black mt-1">
+                    {editingProvider
+                      ? "Actualizar datos del proveedor"
+                      : "Crear proveedor"}
+                  </h2>
+                  <p className="text-slate-500 text-sm mt-1">
+                    Primera capa conectada al nodo PROVEEDORES de Realtime Database.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                  {editingProvider && (
+                    <button
+                      type="button"
+                      onClick={() => { resetForm(); setProveedorModalOpen(false); }}
+                      className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition whitespace-nowrap flex items-center justify-center gap-2"
+                    >
+                      <X size={17} />
+                      Cancelar
+                    </button>
+                  )}
+
+                  {canModifyForm && (
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
+                    >
+                      {saving ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : editingProvider ? (
+                        <Save size={20} />
+                      ) : (
+                        <Plus size={20} />
+                      )}
+                      {saving
+                        ? "Guardando..."
+                        : editingProvider
+                        ? "Actualizar proveedor"
+                        : "Crear proveedor"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Código
+                  </label>
+                  <input
+                    type="text"
+                    value={form.CODIGO}
+                    disabled={!canModifyForm || !!editingProvider}
+                    onChange={(e) => handleChange("CODIGO", e.target.value)}
+                    placeholder="ALI-105"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Proveedor
+                  </label>
+                  <input
+                    type="text"
+                    value={form.PROVEEDOR}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("PROVEEDOR", e.target.value)}
+                    placeholder="ALICO"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={form.EMAIL}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("EMAIL", e.target.value)}
+                    placeholder="proveedor@empresa.com"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    NIT
+                  </label>
+                  <input
+                    type="text"
+                    value={form.NIT}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("NIT", e.target.value)}
+                    placeholder="900000000"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    value={form.TELEFONO}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("TELEFONO", e.target.value)}
+                    placeholder="3000000000"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="hidden">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Hoja
+                  </label>
+                  <input
+                    type="text"
+                    value={form.HOJA}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("HOJA", e.target.value)}
+                    placeholder="Nombre hoja"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="md:col-span-2 xl:col-span-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    value={form.DIRECCION}
+                    disabled={!canModifyForm}
+                    onChange={(e) => handleChange("DIRECCION", e.target.value)}
+                    placeholder="Dirección proveedor"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {productoModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-sm" onMouseDown={e => { if (e.target === e.currentTarget && !saving && !savingProduct) { setProductoModalOpen(false); resetProductForm(); } }}>
+          <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between bg-gradient-to-r from-[#244C5A] to-emerald-800 px-5 py-4 text-white">
+              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Administración</p><h3 className="text-lg font-black">Crear / editar producto</h3></div>
+              <button type="button" onClick={() => { setProductoModalOpen(false); resetProductForm(); }} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Cerrar modal"><X size={20}/></button>
+            </div>
+            <div className="min-h-0 overflow-y-auto bg-slate-50 p-3 sm:p-5">
+            <form
+              onSubmit={handleSaveProduct}
+              className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden mb-6"
+            >
+              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                <div>
+                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
+                    {editingProduct ? "Editando producto" : "Nuevo producto"}
+                  </p>
+                  <h2 className="text-2xl font-black mt-1">
+                    {editingProduct ? "Actualizar producto" : "Agregar producto al proveedor"}
+                  </h2>
+                  <p className="text-slate-500 text-sm mt-1">
+                    Segunda capa: datos base del producto. La operación diaria se maneja en movimientos.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {editingProduct && (
+                    <button
+                      type="button"
+                      onClick={() => { resetProductForm(); setProductoModalOpen(false); }}
+                      className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+
+                  {((editingProduct && can("proveedoresBodega", "editar")) ||
+                    (!editingProduct && can("proveedoresBodega", "crear"))) && (
+                    <button
+                      type="submit"
+                      disabled={savingProduct}
+                      className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
+                    >
+                      {savingProduct ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : editingProduct ? (
+                        <Save size={20} />
+                      ) : (
+                        <Plus size={20} />
+                      )}
+                      {savingProduct
+                        ? "Guardando..."
+                        : editingProduct
+                        ? "Actualizar producto"
+                        : "Crear producto"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Código
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.CODIGO}
+                    onChange={(e) => handleProductChange("CODIGO", e.target.value)}
+                    placeholder="ALI-001"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                  />
+                </div>
+
+                <div className="xl:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Producto
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.PRODUCTO}
+                    onChange={(e) => handleProductChange("PRODUCTO", e.target.value)}
+                    placeholder="Nombre del producto"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Mockup
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="w-full rounded-2xl border border-dashed border-[#244C5A]/35 bg-[#244C5A]/5 px-4 py-3 text-sm font-black text-[#244C5A] hover:bg-[#244C5A]/10 transition cursor-pointer flex items-center justify-center gap-2">
+                      <UploadCloud size={18} />
+                      Adjuntar
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleMockupChange(e.target.files?.[0])}
+                      />
+                    </label>
+
+                    {(mockupPreview || productForm.MOCKUP_URL) && (
+                      <button
+                        type="button"
+                        onClick={removeMockup}
+                        className="w-12 h-12 rounded-2xl border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center transition"
+                        title="Eliminar mockup"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Unidad de empaque
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.UNIDAD_DE_EMPAQUE}
+                    onChange={(e) =>
+                      handleProductChange("UNIDAD_DE_EMPAQUE", e.target.value)
+                    }
+                    placeholder="CAJA, PAQUETE..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Costo
+                  </label>
+                  <input
+                    type="number"
+                    value={productForm.COSTO}
+                    onChange={(e) => handleProductChange("COSTO", e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Stock inicial
+                  </label>
+                  <input
+                    type="number"
+                    value={editingProduct ? normalizeText(editingProduct.datos.STOCK) : "0"}
+                    disabled
+                    placeholder="0"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500 outline-none cursor-not-allowed"
+                  />
+                  <p className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                    El stock no se registra aquí. El ingreso inicial se hace desde el primer movimiento en Proveedores / Bodega.
+                  </p>
+                </div>
+
+                <div className="hidden">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Hoja detalle
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.HOJA_DETALLE}
+                    onChange={(e) =>
+                      handleProductChange("HOJA_DETALLE", e.target.value)
+                    }
+                    placeholder="Referencia hoja o ubicación"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                  />
+                </div>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      )}
       {error && (
         <div className="fixed inset-0 z-[70] bg-slate-950/45 backdrop-blur-[2px] flex items-center justify-center p-4">
           <div className="w-full max-w-[520px] rounded-[32px] bg-white shadow-2xl border border-red-100 overflow-hidden">
