@@ -285,6 +285,7 @@ export default function CompraEtiquetaPage() {
 
   const [items, setItems] = useState<CompraEtiquetaItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [previewTipo, setPreviewTipo] = useState<"alerta" | "manual" | null>(null);
   const [modalMode, setModalMode] = useState<"alerta" | "manual">("alerta");
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
 
@@ -631,6 +632,7 @@ export default function CompraEtiquetaPage() {
       const indicesGuardados = itemsGuardar.map(({ index }) => index);
       setItems((current) => current.filter((_, index) => !indicesGuardados.includes(index)));
       setMessage(`Orden de compra de etiquetas ${ordenLimpia} creada correctamente.`);
+      setPreviewTipo(null);
     } catch (err: any) {
       setError(`No fue posible guardar la orden de etiquetas. ${err?.message || ""}`);
     } finally {
@@ -703,12 +705,12 @@ export default function CompraEtiquetaPage() {
 
               <button
                 type="button"
-                onClick={() => handleSaveCompra("alerta")}
+                onClick={() => setPreviewTipo("alerta")}
                 disabled={saving || alertItems.length === 0}
                 className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20"
               >
                 {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                {saving ? "Guardando..." : "Guardar orden"}
+                {saving ? "Guardando..." : "Previsualizar orden"}
               </button>
             </div>
 
@@ -728,55 +730,13 @@ export default function CompraEtiquetaPage() {
                 <p className="text-4xl font-black text-slate-900">{alertItems.length}</p>
                 <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
                 <div className="border-t border-amber-200 pt-3 text-sm text-slate-700"><span className="font-bold">Alertas disponibles:</span> {alertasFiltradas.length}</div>
-                <button type="button" onClick={() => handleSaveCompra("alerta")} disabled={saving || alertItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Guardar orden</button>
+                <button type="button" onClick={() => setPreviewTipo("alerta")} disabled={saving || alertItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Previsualizar orden</button>
               </aside>
             </div>
-          </section>
-
-          <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-5 py-4 border-b-2 border-sky-200 bg-gradient-to-r from-sky-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-              <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra manual</p>
-                <h3 className="text-xl font-black text-slate-900 mt-1">Etiquetas para comprar sin alerta</h3>
-                <p className="text-sm text-slate-500 mt-1">Compra directa desde ETIQUETAS / CLIENTES con fecha, orden manual, productos agregados y resumen.</p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleSaveCompra("manual")}
-                disabled={saving || manualItems.length === 0}
-                className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20"
-              >
-                {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                {saving ? "Guardando..." : "Guardar orden"}
-              </button>
-            </div>
-
-            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
-              <div className="min-w-0 space-y-4">
-                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
-                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={manualFecha} onChange={e => setManualFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
-                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><ClipboardList size={16}/> Número de orden</span><input type="text" value={ordenCompra} onChange={e => setOrdenCompra(e.target.value.toUpperCase())} placeholder="Ej. OC-001" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500"/></label>
-                </div>
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-xs font-black uppercase text-sky-700">Detalle de la orden</p><h4 className="text-base font-black text-slate-900">Etiquetas sin alerta</h4></div><button type="button" onClick={() => openManualModal()} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Agregar etiqueta</button></div>
-                  <div className="min-w-0 p-3 sm:p-4">{manualItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={manualItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
-                </div>
-              </div>
-              <aside className="h-fit space-y-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-sky-700">Resumen de compra</p>
-                <p className="text-4xl font-black text-slate-900">{manualItems.length}</p>
-                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
-                <div className="border-t border-sky-200 pt-3 text-sm text-slate-700"><span className="font-bold">Productos disponibles:</span> {productos.length}</div>
-                <button type="button" onClick={() => handleSaveCompra("manual")} disabled={saving || manualItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Guardar orden</button>
-              </aside>
-            </div>
-          </section>
-
-          <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
+          <section className="border-t-2 border-amber-200 bg-amber-50/30">
             <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Vista rápida</p>
+                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Alertas disponibles</p>
                 <h3 className="text-xl font-black text-slate-900 mt-1">Alertas de etiquetas disponibles</h3>
               </div>
 
@@ -868,18 +828,78 @@ export default function CompraEtiquetaPage() {
               </div>
             )}
           </section>
+          </section>
+
+          <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-4 sm:px-5 py-4 border-b-2 border-sky-200 bg-gradient-to-r from-sky-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra manual</p>
+                <h3 className="text-xl font-black text-slate-900 mt-1">Etiquetas para comprar sin alerta</h3>
+                <p className="text-sm text-slate-500 mt-1">Compra directa desde ETIQUETAS / CLIENTES con fecha, orden manual, productos agregados y resumen.</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPreviewTipo("manual")}
+                disabled={saving || manualItems.length === 0}
+                className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black px-5 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20"
+              >
+                {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                {saving ? "Guardando..." : "Previsualizar orden"}
+              </button>
+            </div>
+
+            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
+              <div className="min-w-0 space-y-4">
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={manualFecha} onChange={e => setManualFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><ClipboardList size={16}/> Número de orden</span><input type="text" value={ordenCompra} onChange={e => setOrdenCompra(e.target.value.toUpperCase())} placeholder="Ej. OC-001" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-xs font-black uppercase text-sky-700">Detalle de la orden</p><h4 className="text-base font-black text-slate-900">Etiquetas sin alerta</h4></div><button type="button" onClick={() => openManualModal()} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Agregar etiqueta</button></div>
+                  <div className="min-w-0 p-3 sm:p-4">{manualItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={manualItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
+                </div>
+              </div>
+              <aside className="h-fit space-y-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
+                <p className="text-xs font-black uppercase tracking-widest text-sky-700">Resumen de compra</p>
+                <p className="text-4xl font-black text-slate-900">{manualItems.length}</p>
+                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
+                <div className="border-t border-sky-200 pt-3 text-sm text-slate-700"><span className="font-bold">Productos disponibles:</span> {productos.length}</div>
+                <button type="button" onClick={() => setPreviewTipo("manual")} disabled={saving || manualItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Previsualizar orden</button>
+              </aside>
+            </div>
+          </section>
+
+
         </section>
       </section>
 
+      {previewTipo && (() => {
+        const detalles = previewTipo === "alerta" ? alertItems : manualItems;
+        const fechaVista = previewTipo === "alerta" ? fecha : manualFecha;
+        return (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/75 p-3 backdrop-blur-sm sm:p-5">
+            <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-3 bg-[#244C5A] p-5 text-white"><div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Previsualización · Orden de compra</p><h3 className="text-xl font-black">{ordenCompra.trim() || "Orden sin número"}</h3></div><button type="button" onClick={() => setPreviewTipo(null)} className="rounded-xl bg-white/15 p-2" aria-label="Cerrar"><X size={20}/></button></div>
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
+                <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Fecha</p><p className="font-black">{fechaVista || "Sin fecha"}</p></div><div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Origen</p><p className="font-black">{previewTipo === "alerta" ? "Etiquetas en alerta" : "Compra manual"}</p></div><div className="rounded-xl bg-emerald-50 p-4"><p className="text-xs font-bold text-emerald-700">Total de etiquetas</p><p className="text-2xl font-black text-emerald-900">{detalles.length}</p></div></div>
+                <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-slate-100 text-xs uppercase text-slate-600"><tr><th className="p-3">#</th><th className="p-3">Cliente</th><th className="p-3">Producto</th><th className="p-3">Lado</th><th className="p-3 text-right">Cantidad</th></tr></thead><tbody>{detalles.map(({item,index},n) => <tr key={index} className="border-t border-slate-100"><td className="p-3">{n+1}</td><td className="p-3">{item.codigoCliente} · {item.cliente}</td><td className="p-3">{item.codigoProducto} · {item.producto}</td><td className="p-3">{item.lado.toUpperCase()}</td><td className="p-3 text-right font-black">{formatNumber(item.totalComprar)}</td></tr>)}</tbody></table></div>
+              </div>
+              <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 p-4"><button type="button" onClick={() => setPreviewTipo(null)} className="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700">Volver a editar</button><button type="button" disabled={saving || !detalles.length || !fechaVista || !ordenCompra.trim()} onClick={() => handleSaveCompra(previewTipo)} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-6 py-3 font-black text-white disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Crear orden de compra</button></div>
+            </div>
+          </div>
+        );
+      })()}
+
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl bg-slate-50 shadow-2xl">
+          <div className="w-full max-w-6xl max-h-[94vh] overflow-y-auto rounded-2xl bg-slate-50 shadow-2xl">
             <div className="sticky top-0 z-10 bg-gradient-to-r from-[#244C5A] to-emerald-800 border-b border-emerald-700 px-5 py-4 flex items-center justify-between gap-4 text-white">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">
+                <p className="text-xs font-black uppercase tracking-wide text-emerald-100">
                   {editingItemIndex !== null ? "Editar etiqueta" : "Agregar etiqueta"}
                 </p>
-                <h3 className="text-2xl font-black text-slate-900">
+                <h3 className="text-2xl font-black text-white">
                   {modalMode === "alerta" ? "Etiqueta en alerta" : "Etiqueta sin alerta"}
                 </h3>
               </div>
@@ -909,8 +929,8 @@ export default function CompraEtiquetaPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="lg:col-span-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="sm:col-span-2 lg:col-span-4">
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     {modalMode === "alerta" ? "Buscar alerta" : "Buscar etiqueta"}
                   </label>
@@ -944,7 +964,7 @@ export default function CompraEtiquetaPage() {
                       </select>
                     </>
                   ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wide text-slate-500 mb-2">Cliente</label>
                         <select
