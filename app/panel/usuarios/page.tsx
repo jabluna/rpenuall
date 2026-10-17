@@ -40,6 +40,7 @@ import {
   Tag,
   Tags,
   Truck,
+  Trash2,
   UserCircle2,
   UserCog,
   UserRound,
@@ -1603,24 +1604,7 @@ export default function UsuariosPage() {
                                     <Edit3 size={18} />
                                   </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEdit(item)}
-                                    disabled={togglingId === item.id}
-                                    className="w-10 h-10 rounded-2xl border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-60 flex items-center justify-center transition"
-                                    title="Cambiar estado desde Editar"
-                                  >
-                                    {togglingId === item.id ? (
-                                      <Loader2
-                                        className="animate-spin"
-                                        size={18}
-                                      />
-                                    ) : item.activo ? (
-                                      <XCircle size={18} />
-                                    ) : (
-                                      <CheckCircle2 size={18} />
-                                    )}
-                                  </button>
+
                                 </>
                               )}
                             </div>
