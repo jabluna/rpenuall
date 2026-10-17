@@ -1815,7 +1815,7 @@ export default function CrearProveedorPage() {
         }`}
       >
       <header className="bg-white border-b border-slate-200">
-        <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
+        <div className="w-full max-w-none mx-auto px-3 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -1899,7 +1899,7 @@ export default function CrearProveedorPage() {
       </header>
 
 
-      <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
+      <section className="w-full max-w-none mx-auto px-3 sm:px-6 py-6">
         {(error || message) && (
           <div className="mb-5">
             {error && (
@@ -1979,7 +1979,7 @@ export default function CrearProveedorPage() {
               onSubmit={handleSaveMovement}
               className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden mb-6"
             >
-              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+              <div className="p-4 sm:p-5 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div>
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     {editingMovementId ? "Editando movimiento" : "Actualización rápida"}
@@ -2171,7 +2171,7 @@ export default function CrearProveedorPage() {
             </form>
 
             <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="p-4 sm:p-5 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     Tercera capa
@@ -2457,7 +2457,7 @@ export default function CrearProveedorPage() {
                 </div>
               </div>
 
-              <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Código
@@ -2894,7 +2894,7 @@ export default function CrearProveedorPage() {
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     Proveedores creados
                   </p>
-                  <h2 className="text-2xl font-black mt-1">Lista de proveedores</h2>
+                  <h2 className="text-xl sm:text-2xl font-black mt-1 text-[#244C5A]">Lista de proveedores</h2>
                   <p className="text-slate-500 text-sm mt-1">
                     Haz clic en el nombre del proveedor para crear o revisar sus productos.
                   </p>
@@ -2962,31 +2962,31 @@ export default function CrearProveedorPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1220px] border-collapse">
+                  <table className="w-full table-fixed border-collapse text-xs xl:text-sm">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Código
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Proveedor
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Productos
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Email
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           NIT
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Dirección
                         </th>
-                        <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-left px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Teléfono
                         </th>
-                        <th className="text-right px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                        <th className="text-right px-2 xl:px-3 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
                           Acciones
                         </th>
                       </tr>
@@ -2998,13 +2998,13 @@ export default function CrearProveedorPage() {
                           key={item.id}
                           className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
                         >
-                          <td className="px-5 py-4">
+                          <td className="px-2 xl:px-3 py-3">
                             <span className="inline-flex items-center rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
                               {item.codigo}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 xl:px-3 py-3">
                             <button
                               type="button"
                               onClick={() => handleOpenProvider(item)}
@@ -3016,31 +3016,31 @@ export default function CrearProveedorPage() {
                             </button>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 xl:px-3 py-3">
                             <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-black">
                               {Object.keys(item.productosRaw || {}).length}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-700">
+                          <td className="px-2 xl:px-3 py-3 text-sm text-slate-700">
                             {normalizeText(item.datos.EMAIL) || "—"}
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-700">
+                          <td className="px-2 xl:px-3 py-3 text-sm text-slate-700">
                             {normalizeText(item.datos.NIT) || "—"}
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-700 max-w-[320px]">
+                          <td className="px-2 xl:px-3 py-3 text-sm text-slate-700 max-w-[320px]">
                             <span className="line-clamp-2">
                               {normalizeText(item.datos.DIRECCION) || "—"}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-700">
+                          <td className="px-2 xl:px-3 py-3 text-sm text-slate-700">
                             {normalizeText(item.datos.TELEFONO) || "—"}
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 xl:px-3 py-3">
                             <div className="flex items-center justify-end gap-2">
                               {can("proveedoresBodega", "editar") ? (
                                 <button
