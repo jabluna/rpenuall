@@ -420,6 +420,7 @@ export default function RolesPage() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"crear" | "roles">("crear");
+  const [formStep, setFormStep] = useState<1 | 2 | 3>(1);
 
   const userName = useMemo(() => {
     return (
@@ -470,6 +471,7 @@ export default function RolesPage() {
   }, []);
 
   const resetForm = () => {
+    setFormStep(1);
     setRoleName("");
     setPermissions(clonePermissions());
     setEditingId(null);
@@ -640,6 +642,7 @@ export default function RolesPage() {
     setError("");
     setMessage("");
     setActiveTab("crear");
+    setFormStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -724,7 +727,7 @@ export default function RolesPage() {
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="w-10 h-10 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center"
+          className="w-8 h-8 rounded-lg bg-[#244C5A] text-white flex items-center justify-center"
           aria-label="Abrir menú"
         >
           <Menu size={22} />
@@ -740,7 +743,7 @@ export default function RolesPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center"
+          className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center"
           aria-label="Cerrar sesión"
         >
           <LogOut size={20} />
@@ -769,7 +772,7 @@ export default function RolesPage() {
       />
 
       <section className={`${sidebarWidth} pt-16 lg:pt-0 transition-all duration-300`}>
-        <header className="hidden lg:flex h-20 bg-white border-b border-slate-200 px-8 items-center justify-between sticky top-0 z-30">
+        <header className="hidden lg:flex h-16 bg-white border-b border-slate-200 px-6 items-center justify-between sticky top-0 z-30">
           <div>
             <nav aria-label="Ruta de navegación" className="flex items-center gap-2 text-sm text-slate-500">
               <Link href="/panel" className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-[#244C5A] text-white hover:bg-[#1d3d49] transition" title="Ir al dashboard">
@@ -779,26 +782,26 @@ export default function RolesPage() {
                 Panel administrativo
               </Link>
               <span className="text-slate-300">/</span>
-              <span className="font-black text-slate-900">Roles y permisos</span>
+              <span className="text-[13px] font-bold text-slate-900">Roles y permisos</span>
             </nav>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-bold text-slate-800">{userName}</p>
-              <p className="text-xs text-slate-500">{authUser?.email}</p>
+              <p className="text-[11px] font-semibold text-teal-700">{profile?.rolNombre || "Sin rol"}</p><p className="text-[11px] text-slate-500">{authUser?.email}</p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center font-black uppercase">{userName.slice(0, 1)}</div>
+            <div className="w-9 h-9 rounded-xl bg-[#244C5A] text-white flex items-center justify-center font-black uppercase">{userName.slice(0, 1)}</div>
           </div>
         </header>
 
-        <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
-          <div className="bg-[#EAF4EF] rounded-[28px] shadow-sm border border-emerald-100 p-2 mb-6 flex flex-col sm:flex-row gap-2 sticky top-16 lg:top-20 z-20">
+        <section className="max-w-[1600px] mx-auto px-3 sm:px-5 py-4">
+          <div className="bg-[#EAF4EF] rounded-xl shadow-sm border border-emerald-100 p-1.5 mb-3 flex flex-col sm:flex-row gap-2 sticky top-16 lg:top-16 z-20">
             <button
               type="button"
               onClick={() => setActiveTab("crear")}
-              className={`flex-1 rounded-3xl px-5 py-4 text-sm font-black transition flex items-center justify-center gap-3 ${
+              className={`flex-1 rounded-lg px-3 py-2.5 text-[13px] font-bold transition flex items-center justify-center gap-2 ${
                 activeTab === "crear"
-                  ? "bg-[#244C5A] text-white shadow-lg shadow-[#244C5A]/20"
+                  ? "bg-[#244C5A] text-white"
                   : "bg-slate-50 text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -808,10 +811,10 @@ export default function RolesPage() {
             <button
               type="button"
               onClick={() => setActiveTab("roles")}
-              className={`flex-1 rounded-3xl px-5 py-4 text-sm font-black transition flex items-center justify-center gap-3 ${
+              className={`flex-1 rounded-lg px-3 py-2.5 text-[13px] font-bold transition flex items-center justify-center gap-2 ${
                 activeTab === "roles"
                   ? "bg-[#244C5A] text-white shadow-lg shadow-[#244C5A]/20"
-                  : "bg-emerald-50 text-[#244C5A] border border-emerald-200 hover:bg-emerald-100 shadow-sm"
+                  : "bg-slate-50 text-[#244C5A] hover:bg-emerald-50"
               }`}
             >
               <span className="inline-flex w-7 h-7 rounded-full bg-white/20 items-center justify-center text-xs">2</span>
@@ -825,110 +828,49 @@ export default function RolesPage() {
           {activeTab === "crear" && (
           <form
             onSubmit={handleSave}
-            className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden"
+            className="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden"
           >
             <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col gap-5">
-              <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
-                    {editingId ? "Editando rol" : "Nuevo rol"}
-                  </p>
-                  <h2 className="text-2xl font-black mt-1">
-                    {editingId
-                      ? "Actualizar permisos"
-                      : "Crear rol y asignar permisos"}
-                  </h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Sigue los pasos para configurar qué puede ver y hacer cada rol.
-                  </p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-teal-700">{editingId ? "Editar rol" : "Nuevo rol"}</p>
+                  <h2 className="text-lg font-black text-slate-900">{editingId ? "Actualizar permisos" : "Crear rol y asignar permisos"}</h2>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-                  {((editingId && can("roles", "editar")) ||
-                    (!editingId && can("roles", "crear"))) && (
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-6 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
-                    >
-                      {saving ? (
-                        <Loader2 className="animate-spin" size={20} />
-                      ) : (
-                        <Save size={20} />
-                      )}
-                      {saving ? "Guardando..." : editingId ? "Actualizar rol" : "Guardar rol"}
-                    </button>
-                  )}
-
-                  {(can("roles", "crear") || can("roles", "editar")) && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setFullAccess(true)}
-                        className="rounded-2xl border border-[#244C5A] px-4 py-3 text-sm font-black text-[#244C5A] hover:bg-[#244C5A] hover:text-white transition whitespace-nowrap"
-                      >
-                        Acceso total
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setFullAccess(false)}
-                        className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition whitespace-nowrap"
-                      >
-                        Limpiar
-                      </button>
-                    </>
-                  )}
-
-                  {editingId && (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-black text-slate-600 hover:border-[#244C5A] hover:text-[#244C5A] transition whitespace-nowrap flex items-center justify-center gap-2"
-                    >
-                      <X size={17} />
-                      Cancelar
-                    </button>
-                  )}
-                </div>
+                {editingId && <button type="button" onClick={resetForm} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600">Cancelar edición</button>}
               </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50/80 p-4">
-                  <div className="flex items-start gap-3">
-                    <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-black shrink-0">1</span>
-                    <div className="flex-1">
-                      <p className="font-black text-emerald-900">Digite el nombre del rol</p>
-                      <input
-                        type="text"
-                        value={roleName}
-                        disabled={
-                          editingId ? !can("roles", "editar") : !can("roles", "crear")
-                        }
-                        onChange={(e) => setRoleName(e.target.value)}
-                        placeholder="Nombre del rol: Ej. Bodega"
-                        className="mt-3 w-full rounded-2xl border border-emerald-200 bg-emerald-100/70 px-4 py-3 outline-none placeholder:text-emerald-700/70 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 flex gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#244C5A] text-white flex items-center justify-center text-sm font-black shrink-0">2</span>
-                  <div>
-                    <p className="font-black text-slate-900">Seleccione permisos</p>
-                    <p className="text-sm text-slate-500 mt-1">Marca en cada ítem del menú lo que el rol puede ver, crear, editar o eliminar.</p>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 flex gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#244C5A] text-white flex items-center justify-center text-sm font-black shrink-0">3</span>
-                  <div>
-                    <p className="font-black text-slate-900">Guardar rol</p>
-                    <p className="text-sm text-slate-500 mt-1">Finaliza con el botón Guardar rol para dejarlo disponible.</p>
-                  </div>
-                </div>
+              <div className="grid grid-cols-3 gap-2" aria-label="Progreso de creación del rol">
+                {(["Nombre del rol", "Permisos", "Confirmar"] as const).map((label, index) => {
+                  const step = (index + 1) as 1 | 2 | 3;
+                  return <div key={label} aria-current={formStep === step ? "step" : undefined} className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-[11px] font-bold ${formStep === step ? "border-emerald-500 bg-emerald-50 text-emerald-900" : formStep > step ? "border-emerald-200 bg-white text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-400"}`}>
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#244C5A] text-[10px] text-white">{formStep > step ? "✓" : step}</span>
+                    {label}
+                  </div>;
+                })}
               </div>
+              {formStep === 1 && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+                  <label htmlFor="nombre-rol" className="text-xs font-bold text-emerald-900">1. Nombre del rol</label>
+                  <input id="nombre-rol" type="text" autoFocus value={roleName} disabled={editingId ? !can("roles", "editar") : !can("roles", "crear")} onChange={(e) => setRoleName(e.target.value)} placeholder="Ej. Bodega" className="mt-2 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+                  <div className="mt-3 flex justify-end"><button type="button" disabled={!roleName.trim()} onClick={() => setFormStep(2)} className="rounded-lg bg-[#244C5A] px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Continuar a permisos →</button></div>
+                </div>
+              )}
+              {formStep === 2 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs text-slate-600">2. Define los permisos de <strong className="text-slate-900">{roleName.trim()}</strong></p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setFullAccess(true)} className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-bold text-teal-800">Acceso total</button>
+                    <button type="button" onClick={() => setFullAccess(false)} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600">Limpiar</button>
+                  </div>
+                </div>
+              )}
+              {formStep === 3 && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                  <p className="font-black">3. Confirmar {editingId ? "actualización" : "creación"}</p>
+                  <p className="mt-1 text-xs">Rol: <strong>{roleName.trim()}</strong> · Permisos activados: <strong>{menuItems.reduce((total, item) => total + actions.filter((action) => permissions[item.key]?.[action.key]).length, 0)}</strong></p>
+                  <p className="mt-1 text-xs">Revisa el resumen y guarda para finalizar.</p>
+                </div>
+              )}
+
             </div>
 
             {(error || message) && (
@@ -947,12 +889,12 @@ export default function RolesPage() {
               </div>
             )}
 
-            <div className="p-5 sm:p-6">
-              <div className="overflow-x-auto rounded-3xl border border-slate-200">
-                <table className="w-full min-w-[850px] border-collapse">
+            <div className="p-3 sm:p-4">
+              {formStep === 2 && <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <table className="w-full min-w-[720px] border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-500">
                         Opción del menú
                       </th>
 
@@ -1009,16 +951,16 @@ export default function RolesPage() {
                           key={item.key}
                           className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
                         >
-                          <td className="px-4 py-4">
+                          <td className="px-3 py-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-[#244C5A] text-white flex items-center justify-center shrink-0">
                                 <Icon size={20} />
                               </div>
                               <div>
                                 <p className="font-black text-slate-900">
                                   {item.label}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-[11px] text-slate-500">
                                   {item.description}
                                 </p>
                               </div>
@@ -1031,7 +973,7 @@ export default function RolesPage() {
                             return (
                               <td
                                 key={action.key}
-                                className="px-4 py-4 text-center"
+                                className="px-3 py-2 text-center"
                               >
                                 <button
                                   type="button"
@@ -1039,7 +981,7 @@ export default function RolesPage() {
                                   onClick={() =>
                                     togglePermission(item.key, action.key)
                                   }
-                                  className={`mx-auto w-10 h-10 rounded-2xl border flex items-center justify-center transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                                  className={`mx-auto w-8 h-8 rounded-lg border flex items-center justify-center transition disabled:opacity-60 disabled:cursor-not-allowed ${
                                     checked
                                       ? "bg-[#244C5A] border-[#244C5A] text-white shadow-md shadow-[#244C5A]/20"
                                       : "bg-white border-slate-200 text-slate-300 hover:border-[#244C5A] hover:text-[#244C5A]"
@@ -1052,7 +994,7 @@ export default function RolesPage() {
                             );
                           })}
 
-                          <td className="px-4 py-4 text-center">
+                          <td className="px-3 py-2 text-center">
                             <button
                               type="button"
                               disabled={!canModify}
@@ -1078,28 +1020,12 @@ export default function RolesPage() {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </div>}
 
-              <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-xs text-slate-500">
-                  Si tu rol no tiene permiso de crear o editar roles, la matriz queda bloqueada en solo lectura.
-                </p>
-
-                {((editingId && can("roles", "editar")) ||
-                  (!editingId && can("roles", "crear"))) && (
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] disabled:opacity-70 disabled:cursor-not-allowed text-white font-black px-6 py-3 flex items-center justify-center gap-2 shadow-lg shadow-[#244C5A]/20 whitespace-nowrap"
-                  >
-                    {saving ? (
-                      <Loader2 className="animate-spin" size={20} />
-                    ) : (
-                      <Save size={20} />
-                    )}
-                    {saving ? "Guardando..." : editingId ? "Actualizar rol" : "Guardar rol"}
-                  </button>
-                )}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                {formStep > 1 ? <button type="button" onClick={() => setFormStep(formStep === 3 ? 2 : 1)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700">← Anterior</button> : <span className="text-xs text-slate-400">Primero escribe el nombre del rol.</span>}
+                {formStep === 2 && <button type="button" onClick={() => setFormStep(3)} className="rounded-lg bg-[#244C5A] px-4 py-2 text-xs font-bold text-white">Revisar y continuar →</button>}
+                {formStep === 3 && ((editingId && can("roles", "editar")) || (!editingId && can("roles", "crear"))) && <button type="submit" disabled={saving} className="flex items-center gap-2 rounded-lg bg-[#244C5A] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}{saving ? "Guardando..." : editingId ? "Actualizar rol" : "Guardar rol"}</button>}
               </div>
             </div>
           </form>
@@ -1315,7 +1241,7 @@ function AppSidebar({
             <button
               type="button"
               onClick={() => setSidebarCollapsed((current) => !current)}
-              className="hidden lg:flex w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/15 items-center justify-center"
+              className="hidden lg:flex w-8 h-8 rounded-lg bg-white/10 hover:bg-white/15 items-center justify-center"
               aria-label="Encoger o ampliar menú"
             >
               {sidebarCollapsed ? (
@@ -1327,7 +1253,7 @@ function AppSidebar({
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center"
+              className="lg:hidden w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"
               aria-label="Cerrar menú"
             >
               <X size={21} />
@@ -1352,7 +1278,7 @@ function AppSidebar({
           </div>
         )}
 
-        <nav className="px-4 py-4 flex-1 space-y-2 overflow-y-auto">
+        <nav className="px-3 py-2 flex-1 space-y-2 overflow-y-auto">
           <Link
             href="/panel"
             className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-[#244C5A] font-bold shadow-lg ${sidebarCollapsed ? "justify-center" : ""}`}
