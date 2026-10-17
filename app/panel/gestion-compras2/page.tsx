@@ -1055,7 +1055,7 @@ export default function GestionComprasBodegaPage() {
   };
 
   const toggleExpanded = (compraId: string) => {
-    setExpanded((current) => ({ ...current, [compraId]: !current[compraId] }));
+    setExpanded((current) => ({ [compraId]: !current[compraId] }));
   };
 
   const handleLogout = async () => {
@@ -1670,112 +1670,12 @@ export default function GestionComprasBodegaPage() {
                                     onClick={() => toggleExpanded(compra.id)}
                                     className="rounded-2xl bg-[#244C5A] text-white px-4 py-2 text-xs font-black hover:bg-[#1b3b46] transition"
                                   >
-                                    {estaAbierta ? "Ocultar" : "Desplegar"}
+                                    <><Eye size={15} className="inline mr-1" /> Ver detalle</>
                                   </button>
                                 </div>
                               </td>
                             </tr>
 
-                            {estaAbierta && (
-                              <tr className="border-b border-emerald-200 bg-emerald-50/70">
-                                <td colSpan={6} className="p-4">
-                                  <div className="rounded-3xl border border-emerald-200 bg-emerald-50 overflow-hidden shadow-sm shadow-emerald-100">
-                                    <div className="px-4 py-3 border-b border-emerald-200 bg-emerald-50">
-                                      <p className="font-black text-slate-900">
-                                        Detalle de productos y verificaciones
-                                      </p>
-                                      <p className="text-xs text-slate-500 mt-1">
-                                        La recepción se verifica por producto. Los procesos de factura, pago y contabilización se gestionan una sola vez por orden.
-                                      </p>
-                                    </div>
-                                    {renderProcesosGeneralesOrden(compra)}
-                                    <div className="w-full min-w-0">
-                                      <table className="w-full table-fixed border-collapse text-xs xl:text-sm">
-                                        <thead>
-                                          <tr className="bg-slate-50 border-b border-slate-200">
-                                            <th className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[250px]">
-                                              Producto / proveedor
-                                            </th>
-                                            <th className="text-center px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[110px]">
-                                              Compra
-                                            </th>
-                                            {procesosProducto.map((proceso) => (
-                                              <th
-                                                key={`${compra.id}-head-${proceso.key}`}
-                                                className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500"
-                                              >
-                                                {proceso.titulo}
-                                              </th>
-                                            ))}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {items.map((item, index) => {
-                                            const key = itemKey(item, index);
-                                            return (
-                                              <tr
-                                                key={`${compra.id}-detalle-${key}`}
-                                                className="border-b border-slate-100 last:border-b-0 align-top"
-                                              >
-                                                <td className="px-3 py-3">
-                                                  <p className="font-black text-slate-900">
-                                                    {item.codigoEnvase ||
-                                                      item.codigoProducto ||
-                                                      "Sin código"}
-                                                  </p>
-                                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                                                    {item.descripcion ||
-                                                      item.producto ||
-                                                      "Sin descripción"}
-                                                  </p>
-                                                  <p className="text-[11px] text-slate-500 mt-1">
-                                                    Proveedor:{" "}
-                                                    <strong>
-                                                      {item.proveedor ||
-                                                        "Sin proveedor"}
-                                                    </strong>
-                                                  </p>
-                                                </td>
-                                                <td className="px-3 py-3 text-center font-black text-slate-900">
-                                                  {item.total || 0}
-                                                </td>
-                                                {(() => {
-                                                  const estado = obtenerEstado(compra.id, key, "recepcion_mercancia");
-                                                  return (
-                                                    <td className="px-3 py-3 w-[260px]">
-                                                      <div className="flex flex-col items-start gap-2">
-                                                        <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${estadoClass(estado.estado)}`}>
-                                                          {mostrarEstado(estado.estado)}
-                                                        </span>
-                                                        <button
-                                                          type="button"
-                                                          onClick={() => abrirModalRecepcion(compra, item, key)}
-                                                          disabled={loadingRecepcion}
-                                                          className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-3 py-2 text-xs font-black text-white hover:bg-[#1b3b46] disabled:opacity-60 transition"
-                                                        >
-                                                          {loadingRecepcion ? <Loader2 className="animate-spin" size={14} /> : <Plus size={14} />}
-                                                          Recibir mercancía
-                                                        </button>
-                                                        {estado.meta && (
-                                                          <div className="text-[10px] text-slate-500 leading-4">
-                                                            <p className="font-bold truncate">{estado.meta.usuario}</p>
-                                                            <p>{formatoFechaHora(estado.meta.fecha)}</p>
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                    </td>
-                                                  );
-                                                })()}
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
                           </Fragment>
                         );
                       })}
@@ -1915,88 +1815,10 @@ export default function GestionComprasBodegaPage() {
                             onClick={() => toggleExpanded(compra.id)}
                             className="w-full rounded-2xl bg-[#244C5A] text-white px-4 py-3 text-sm font-black"
                           >
-                            {estaAbierta
-                              ? "Ocultar productos"
-                              : "Desplegar productos"}
+                            "Ver detalle de la orden"
                           </button>
                         </div>
 
-                        {estaAbierta && (
-                          <div className="mt-4 space-y-4 rounded-3xl border border-emerald-200 bg-emerald-50/70 p-3">
-                            <div className="rounded-3xl overflow-hidden border border-emerald-200 bg-white">
-                              {renderProcesosGeneralesOrden(compra)}
-                            </div>
-                            {items.map((item, index) => {
-                              const key = itemKey(item, index);
-                              return (
-                                <div
-                                  key={`${compra.id}-mobile-item-${key}`}
-                                  className="rounded-3xl border border-slate-200 overflow-hidden"
-                                >
-                                  <div className="p-4 bg-slate-50 border-b border-slate-200">
-                                    <p className="font-black text-slate-900">
-                                      {item.codigoEnvase ||
-                                        item.codigoProducto ||
-                                        "Sin código"}
-                                    </p>
-                                    <p className="text-sm text-slate-600 mt-1">
-                                      {item.descripcion ||
-                                        item.producto ||
-                                        "Sin descripción"}
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-                                      <div>
-                                        <p className="text-slate-400 font-black uppercase">
-                                          Proveedor
-                                        </p>
-                                        <p className="font-black text-slate-700">
-                                          {item.proveedor || "N/A"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-slate-400 font-black uppercase">
-                                          Compra
-                                        </p>
-                                        <p className="font-black text-slate-700">
-                                          {item.total || 0}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="p-3 space-y-3">
-                                    {(() => {
-                                      const estado = obtenerEstado(compra.id, key, "recepcion_mercancia");
-                                      return (
-                                        <div className="rounded-2xl border border-slate-200 p-3">
-                                          <div className="flex items-center justify-between gap-3">
-                                            <p className="font-black text-sm text-slate-900">Recepción de mercancía</p>
-                                            <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${estadoClass(estado.estado)}`}>
-                                              {mostrarEstado(estado.estado)}
-                                            </span>
-                                          </div>
-                                          <button
-                                            type="button"
-                                            onClick={() => abrirModalRecepcion(compra, item, key)}
-                                            disabled={loadingRecepcion}
-                                            className="w-full mt-3 rounded-2xl bg-[#244C5A] text-white px-4 py-3 text-sm font-black disabled:opacity-60"
-                                          >
-                                            {loadingRecepcion ? "Abriendo..." : "Recibir mercancía"}
-                                          </button>
-                                          {estado.meta && (
-                                            <div className="mt-2 text-[11px] text-slate-500 leading-4">
-                                              <p className="font-bold">{estado.meta.usuario}</p>
-                                              <p>{formatoFechaHora(estado.meta.fecha)}</p>
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -2034,7 +1856,124 @@ export default function GestionComprasBodegaPage() {
         </section>
 
 
-        {recepcionModal && (
+        {compras.find(compra => expanded[compra.id]) && (() => {
+        const compra = compras.find(compra => expanded[compra.id])!;
+        const items = compra.items || [];
+        return (
+          <div className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 p-2 sm:p-5 backdrop-blur-sm" onMouseDown={event => { if(event.target === event.currentTarget) toggleExpanded(compra.id); }}>
+            <div className="flex max-h-[94vh] w-full max-w-[1450px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+              <div className="flex shrink-0 items-start justify-between gap-4 bg-gradient-to-r from-[#244C5A] to-emerald-800 p-4 text-white sm:p-6">
+                <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Gestión y verificaciones</p>
+                  <h2 className="mt-1 text-xl font-black sm:text-2xl">Orden {compra.consecutivo}</h2>
+                  <p className="mt-1 text-sm text-white/80">{items.length} producto(s) · Revisa los procesos y recibe la mercancía desde aquí</p>
+                </div>
+                <button type="button" onClick={() => toggleExpanded(compra.id)} className="rounded-xl bg-white/15 p-2.5 text-white hover:bg-white/25" aria-label="Cerrar detalle de orden"><X size={20}/></button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-5">
+                                                  <div className="rounded-3xl border border-emerald-200 bg-emerald-50 overflow-hidden shadow-sm shadow-emerald-100">
+                                    <div className="px-4 py-3 border-b border-emerald-200 bg-emerald-50">
+                                      <p className="font-black text-slate-900">
+                                        Detalle de productos y verificaciones
+                                      </p>
+                                      <p className="text-xs text-slate-500 mt-1">
+                                        La recepción se verifica por producto. Los procesos de factura, pago y contabilización se gestionan una sola vez por orden.
+                                      </p>
+                                    </div>
+                                    {renderProcesosGeneralesOrden(compra)}
+                                    <div className="w-full overflow-x-auto">
+                                      <table className="w-full min-w-[850px] border-collapse text-xs xl:text-sm">
+                                        <thead>
+                                          <tr className="bg-slate-50 border-b border-slate-200">
+                                            <th className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[250px]">
+                                              Producto / proveedor
+                                            </th>
+                                            <th className="text-center px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[110px]">
+                                              Compra
+                                            </th>
+                                            {procesosProducto.map((proceso) => (
+                                              <th
+                                                key={`${compra.id}-head-${proceso.key}`}
+                                                className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500"
+                                              >
+                                                {proceso.titulo}
+                                              </th>
+                                            ))}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {items.map((item, index) => {
+                                            const key = itemKey(item, index);
+                                            return (
+                                              <tr
+                                                key={`${compra.id}-detalle-${key}`}
+                                                className="border-b border-slate-100 last:border-b-0 align-top"
+                                              >
+                                                <td className="px-3 py-3">
+                                                  <p className="font-black text-slate-900">
+                                                    {item.codigoEnvase ||
+                                                      item.codigoProducto ||
+                                                      "Sin código"}
+                                                  </p>
+                                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                                                    {item.descripcion ||
+                                                      item.producto ||
+                                                      "Sin descripción"}
+                                                  </p>
+                                                  <p className="text-[11px] text-slate-500 mt-1">
+                                                    Proveedor:{" "}
+                                                    <strong>
+                                                      {item.proveedor ||
+                                                        "Sin proveedor"}
+                                                    </strong>
+                                                  </p>
+                                                </td>
+                                                <td className="px-3 py-3 text-center font-black text-slate-900">
+                                                  {item.total || 0}
+                                                </td>
+                                                {(() => {
+                                                  const estado = obtenerEstado(compra.id, key, "recepcion_mercancia");
+                                                  return (
+                                                    <td className="px-3 py-3 w-[260px]">
+                                                      <div className="flex flex-col items-start gap-2">
+                                                        <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${estadoClass(estado.estado)}`}>
+                                                          {mostrarEstado(estado.estado)}
+                                                        </span>
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => abrirModalRecepcion(compra, item, key)}
+                                                          disabled={loadingRecepcion}
+                                                          className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-3 py-2 text-xs font-black text-white hover:bg-[#1b3b46] disabled:opacity-60 transition"
+                                                        >
+                                                          {loadingRecepcion ? <Loader2 className="animate-spin" size={14} /> : <Plus size={14} />}
+                                                          Recibir mercancía
+                                                        </button>
+                                                        {estado.meta && (
+                                                          <div className="text-[10px] text-slate-500 leading-4">
+                                                            <p className="font-bold truncate">{estado.meta.usuario}</p>
+                                                            <p>{formatoFechaHora(estado.meta.fecha)}</p>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    </td>
+                                                  );
+                                                })()}
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+              </div>
+              <div className="flex shrink-0 justify-end border-t border-slate-200 bg-white px-5 py-3">
+                <button type="button" onClick={() => toggleExpanded(compra.id)} className="rounded-xl bg-[#244C5A] px-5 py-2.5 text-sm font-black text-white">Cerrar detalle</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {recepcionModal && (
           <div className="fixed inset-0 z-[1002] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center px-3 sm:px-5 py-5">
             <div className="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden max-h-[94vh] flex flex-col border border-white/20">
               <div className="p-5 sm:p-6 border-b border-emerald-800 bg-gradient-to-r from-[#244C5A] to-emerald-800 text-white flex items-start justify-between gap-4">
