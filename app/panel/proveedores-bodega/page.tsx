@@ -2530,7 +2530,7 @@ export default function ProveedoresBodegaPage() {
               onSubmit={handleSubmit}
               className="bg-white"
             >
-              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+              <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     {editingProvider ? "Editando proveedor" : "Nuevo proveedor"}
@@ -2921,7 +2921,14 @@ export default function ProveedoresBodegaPage() {
                   </h2>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 sm:justify-start">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-emerald-800">Stock real calculado</p>
+                    <p className="text-[10px] text-emerald-700">{normalizeNumber(movementBaseBalance)} + {normalizeNumber(movementForm.INGRESO || 0)} − {normalizeNumber(movementForm.SALIDA || 0)}</p>
+                  </div>
+                  <span className="text-2xl font-black tabular-nums text-emerald-800">{normalizeNumber(calculatedBalance)}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
                   {editingMovementId && (
                     <button
                       type="button"
@@ -3131,20 +3138,7 @@ export default function ProveedoresBodegaPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2 xl:col-span-7 flex flex-col gap-3 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-900">
-                      <Boxes size={19} /> Stock real calculado
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-emerald-800">
-                      Actual: {normalizeNumber(movementBaseBalance)} + Ingreso: {normalizeNumber(movementForm.INGRESO || 0)} − Salida: {normalizeNumber(movementForm.SALIDA || 0)}
-                    </p>
-                  </div>
-                  <div className="flex items-baseline gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-white shadow-sm">
-                    <span className="text-xs font-bold uppercase tracking-wide text-emerald-100">Resultado</span>
-                    <span className="text-3xl font-black tabular-nums">{normalizeNumber(calculatedBalance)}</span>
-                  </div>
-                </div>
+
               </div>
             </form>
 
