@@ -714,7 +714,7 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
+            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)] sm:p-5">
               <div className="min-w-0 space-y-4">
                 <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
                   <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
@@ -725,15 +725,7 @@ export default function CompraEtiquetaPage() {
                   <div className="min-w-0 p-3 sm:p-4">{alertItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={alertItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
                 </div>
               </div>
-              <aside className="h-fit space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-amber-700">Resumen de compra</p>
-                <p className="text-4xl font-black text-slate-900">{alertItems.length}</p>
-                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
-                <div className="border-t border-amber-200 pt-3 text-sm text-slate-700"><span className="font-bold">Alertas disponibles:</span> {alertasFiltradas.length}</div>
-                <button type="button" onClick={() => setPreviewTipo("alerta")} disabled={saving || alertItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Previsualizar orden</button>
-              </aside>
-            </div>
-          <section className="border-t-2 border-amber-200 bg-amber-50/30">
+              <aside className="min-w-0">          <section className="h-full min-w-0 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/30">
             <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Alertas disponibles</p>
@@ -765,7 +757,7 @@ export default function CompraEtiquetaPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-xs xl:text-sm">
+                <table className="w-full min-w-[650px] border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-4 py-2 text-[11px] font-black uppercase tracking-wide text-slate-500">Cliente</th>
@@ -827,7 +819,9 @@ export default function CompraEtiquetaPage() {
                 )}
               </div>
             )}
-          </section>
+          </section></aside>
+            </div>
+
           </section>
 
           <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
@@ -849,7 +843,7 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
+            <div className="grid min-w-0 gap-4 p-4 sm:p-5">
               <div className="min-w-0 space-y-4">
                 <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
                   <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={manualFecha} onChange={e => setManualFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
@@ -860,13 +854,7 @@ export default function CompraEtiquetaPage() {
                   <div className="min-w-0 p-3 sm:p-4">{manualItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={manualItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
                 </div>
               </div>
-              <aside className="h-fit space-y-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-sky-700">Resumen de compra</p>
-                <p className="text-4xl font-black text-slate-900">{manualItems.length}</p>
-                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
-                <div className="border-t border-sky-200 pt-3 text-sm text-slate-700"><span className="font-bold">Productos disponibles:</span> {productos.length}</div>
-                <button type="button" onClick={() => setPreviewTipo("manual")} disabled={saving || manualItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Previsualizar orden</button>
-              </aside>
+
             </div>
           </section>
 
@@ -883,9 +871,10 @@ export default function CompraEtiquetaPage() {
               <div className="flex shrink-0 items-center justify-between gap-3 bg-[#244C5A] p-5 text-white"><div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Previsualización · Orden de compra</p><h3 className="text-xl font-black">{ordenCompra.trim() || "Orden sin número"}</h3></div><button type="button" onClick={() => setPreviewTipo(null)} className="rounded-xl bg-white/15 p-2" aria-label="Cerrar"><X size={20}/></button></div>
               <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
                 <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Fecha</p><p className="font-black">{fechaVista || "Sin fecha"}</p></div><div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Origen</p><p className="font-black">{previewTipo === "alerta" ? "Etiquetas en alerta" : "Compra manual"}</p></div><div className="rounded-xl bg-emerald-50 p-4"><p className="text-xs font-bold text-emerald-700">Total de etiquetas</p><p className="text-2xl font-black text-emerald-900">{detalles.length}</p></div></div>
+                {(!fechaVista || !ordenCompra.trim()) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">Para crear la orden debes completar { !fechaVista && !ordenCompra.trim() ? "la fecha y el número de orden" : !fechaVista ? "la fecha" : "el número de orden" }. Puedes volver a editar para completarlos.</p>}
                 <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-slate-100 text-xs uppercase text-slate-600"><tr><th className="p-3">#</th><th className="p-3">Cliente</th><th className="p-3">Producto</th><th className="p-3">Lado</th><th className="p-3 text-right">Cantidad</th></tr></thead><tbody>{detalles.map(({item,index},n) => <tr key={index} className="border-t border-slate-100"><td className="p-3">{n+1}</td><td className="p-3">{item.codigoCliente} · {item.cliente}</td><td className="p-3">{item.codigoProducto} · {item.producto}</td><td className="p-3">{item.lado.toUpperCase()}</td><td className="p-3 text-right font-black">{formatNumber(item.totalComprar)}</td></tr>)}</tbody></table></div>
               </div>
-              <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 p-4"><button type="button" onClick={() => setPreviewTipo(null)} className="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700">Volver a editar</button><button type="button" disabled={saving || !detalles.length || !fechaVista || !ordenCompra.trim()} onClick={() => handleSaveCompra(previewTipo)} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-6 py-3 font-black text-white disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Crear orden de compra</button></div>
+              <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 p-4"><button type="button" onClick={() => setPreviewTipo(null)} className="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700">Volver a editar</button><button type="button" disabled={saving || !detalles.length} onClick={() => { if (!fechaVista || !ordenCompra.trim()) { setPreviewTipo(null); setError(!fechaVista ? "Selecciona la fecha de la orden antes de crearla." : "Digita el número de orden de compra antes de crearla."); return; } void handleSaveCompra(previewTipo); }} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-6 py-3 font-black text-white disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Crear orden de compra</button></div>
             </div>
           </div>
         );
