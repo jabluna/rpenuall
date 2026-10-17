@@ -2495,6 +2495,11 @@ export default function ProveedoresBodegaPage() {
                 <ArrowLeft size={19} /> Volver a productos
               </button>
             )}
+          {selectedProvider && !selectedProduct && (
+            <button type="button" onClick={handleBackToProviders} className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-black text-slate-950 shadow-sm ring-2 ring-amber-200 transition hover:bg-amber-300">
+              <ArrowLeft size={19} /> Volver a proveedores
+            </button>
+          )}
           <Link
             href="/panel/bodegas"
             className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#1d3d49]"
@@ -3172,7 +3177,7 @@ export default function ProveedoresBodegaPage() {
                     />
                   </div>
 
-                  <div className="rounded-2xl bg-[#244C5A]/10 text-[#244C5A] px-4 py-3 font-black text-center">
+                  <div className="rounded-xl border border-emerald-300 bg-white text-[#244C5A] px-3 py-2 font-black text-center">
                     {filteredMovements.length} movimientos
                   </div>
                 </div>
@@ -3320,61 +3325,25 @@ export default function ProveedoresBodegaPage() {
           </>
         ) : selectedProvider ? (
           <>
-            <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
-              <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
-              <div className="absolute right-24 bottom-[-80px] w-56 h-56 rounded-full bg-white/10" />
-
-              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleBackToProviders}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 px-4 py-2 text-sm font-bold transition mb-5"
-                  >
-                    <ArrowLeft size={17} />
-                    Volver a proveedores
-                  </button>
-
-                  <p className="text-sm text-white/65 uppercase tracking-wide font-bold">
-                    {selectedProvider.codigo}
-                  </p>
-                  <h2 className="text-3xl sm:text-4xl font-black mt-1">
-                    {selectedProvider.nombre}
-                  </h2>
-                  <p className="text-white/70 mt-2 max-w-3xl">
-                    {selectedProvider.datos.DIRECCION || "Sin dirección registrada"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Productos
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {products.length}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Stock total
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeNumber(totalStock)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4 col-span-2 sm:col-span-1">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Valor inventario
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeMoney(totalValorInventario)}
-                    </p>
-                  </div>
+            <section className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="col-span-2 flex min-w-0 items-center gap-3 rounded-xl border border-emerald-300 bg-white p-3 shadow-sm sm:col-span-1">
+                <Building2 size={25} className="shrink-0 text-teal-700" />
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-semibold text-slate-500">{selectedProvider.codigo}</p>
+                  <h2 className="truncate text-sm font-black text-slate-900" title={selectedProvider.nombre}>{selectedProvider.nombre}</h2>
+                  <p className="truncate text-[11px] text-slate-500">{selectedProvider.datos.DIRECCION || "Sin dirección"}</p>
                 </div>
               </div>
+              {[
+                {label:"Productos",value:String(products.length)},
+                {label:"Stock total",value:normalizeNumber(totalStock)},
+                {label:"Valor inventario",value:normalizeMoney(totalValorInventario)},
+              ].map(stat => (
+                <div key={stat.label} className="flex min-h-[72px] min-w-0 flex-col justify-center rounded-xl border border-emerald-300 bg-white px-3 py-2 shadow-sm">
+                  <p className="text-[11px] font-semibold text-slate-500">{stat.label}</p>
+                  <p className="mt-1 truncate text-xl font-black tabular-nums text-[#244C5A]" title={String(stat.value)}>{stat.value}</p>
+                </div>
+              ))}
             </section>
 
             <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
@@ -3383,7 +3352,7 @@ export default function ProveedoresBodegaPage() {
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     Segunda capa
                   </p>
-                  <h2 className="text-2xl font-black mt-1">Productos</h2>
+                  <h2 className="mt-1 inline-flex items-center rounded-xl border-l-4 border-teal-500 bg-teal-50 px-4 py-2 text-xl font-black tracking-tight text-[#244C5A] sm:text-2xl">Productos</h2>
                   <p className="text-slate-500 text-sm mt-1">
                     Haz clic en cualquier parte de la fila del producto para ver sus movimientos.
                   </p>
@@ -3632,7 +3601,7 @@ export default function ProveedoresBodegaPage() {
                   <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                     Nodo PROVEEDORES
                   </p>
-                  <h2 className="text-2xl font-black mt-1">Lista de proveedores</h2>
+                  <h2 className="mt-1 inline-flex items-center rounded-xl border-l-4 border-teal-500 bg-teal-50 px-4 py-2 text-xl font-black tracking-tight text-[#244C5A] sm:text-2xl">Lista de proveedores</h2>
                   <p className="text-slate-500 text-sm mt-1">
                     Haz clic en cualquier parte de la fila del proveedor para ver sus productos.
                   </p>
@@ -3657,7 +3626,7 @@ export default function ProveedoresBodegaPage() {
                     {filteredProviders.length} proveedores
                   </div>
 
-                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 text-center min-w-[220px]">
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-700 px-3 py-2 text-center min-w-[220px]">
                     <p className="text-[11px] uppercase tracking-wide font-black text-emerald-600/80">Valor total inventario</p>
                     <p className="text-lg font-black leading-tight">{normalizeMoney(totalValorInventarioGeneral)}</p>
                   </div>
