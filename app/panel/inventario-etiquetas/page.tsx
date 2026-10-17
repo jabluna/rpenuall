@@ -1226,6 +1226,7 @@ export default function EtiquetasPage() {
           </div>
         </section>
 
+        {!selectedCliente && (
         <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -1357,17 +1358,14 @@ export default function EtiquetasPage() {
             </div>
           )}
         </section>
-      </section>
-
-      {selectedCliente && (
-        <div className="fixed inset-0 z-[45] flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={event => { if(event.target === event.currentTarget) { setSelectedClienteId(null); setSelectedProductoId(null); } }}>
-          <div className="flex max-h-[95vh] w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between gap-3 bg-gradient-to-r from-[#244C5A] to-emerald-800 p-4 text-white sm:px-6">
-              <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Segunda capa · Productos del cliente</p><h2 className="text-xl font-black">{selectedCliente.codigoCliente} · {selectedCliente.cliente}</h2></div>
-              <button type="button" onClick={() => {setSelectedClienteId(null);setSelectedProductoId(null);}} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Cerrar productos"><X size={20}/></button>
+        )}
+        {selectedCliente && !selectedProductoId && (
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+              <div><p className="text-xs font-black uppercase text-emerald-700">Segunda capa · Productos</p><h2 className="text-xl font-black text-[#244C5A]">{selectedCliente.codigoCliente} · {selectedCliente.cliente}</h2></div>
+              <button type="button" onClick={() => {setSelectedClienteId(null);setSelectedProductoId(null);}} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white"><ArrowLeft size={17}/> Volver a clientes</button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-5">
-                                            <div className="rounded-[26px] border border-slate-200 bg-white overflow-hidden shadow-sm">
+                                                        <div className="rounded-[26px] border border-slate-200 bg-white overflow-hidden shadow-sm">
                                 <div className="p-5 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                   <div>
                                     <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">Segunda capa</p>
@@ -1502,21 +1500,21 @@ export default function EtiquetasPage() {
                                   </div>
                                 )}
                               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {selectedCliente && selectedProductoId && (() => {
-        const producto = selectedCliente.productos.find(item => item.id === selectedProductoId);
-        if (!producto) return null;
-        return <div className="fixed inset-0 z-[48] flex items-center justify-center bg-slate-950/75 p-2 backdrop-blur-sm sm:p-5">
-          <div className="flex max-h-[95vh] w-full max-w-[1450px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between gap-3 bg-gradient-to-r from-[#244C5A] to-emerald-800 p-4 text-white sm:px-6"><div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Tercera capa · Movimientos</p><h3 className="text-xl font-black">{producto.codigo}</h3></div><button type="button" onClick={() => setSelectedProductoId(null)} className="rounded-xl bg-white/15 p-2 hover:bg-white/25" aria-label="Volver a productos"><X size={20}/></button></div>
-            <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-slate-50 p-3 sm:p-5"><DetalleMovimientos producto={producto} draft={draft} onDraftChange={setDraft} onSave={handleSaveMovimiento} savingSide={savingSide} isMaster={isMaster}/></div>
-          </div>
-        </div>;
-      })()}
+          </section>
+        )}
+        {selectedCliente && selectedProductoId && (() => {
+          const producto = selectedCliente.productos.find(item => item.id === selectedProductoId);
+          if (!producto) return null;
+          return <section className="min-w-0 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+              <div><p className="text-xs font-black uppercase text-emerald-700">Tercera capa · Movimientos</p><h2 className="text-xl font-black text-[#244C5A]">{producto.codigo}</h2></div>
+              <button type="button" onClick={() => setSelectedProductoId(null)} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white"><ArrowLeft size={17}/> Volver a productos</button>
+            </div>
+            <div className="min-w-0 overflow-x-auto"><DetalleMovimientos producto={producto} draft={draft} onDraftChange={setDraft} onSave={handleSaveMovimiento} savingSide={savingSide} isMaster={isMaster}/></div>
+          </section>;
+        })()}
+      </section>
 
       {editingProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
