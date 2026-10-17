@@ -1447,7 +1447,7 @@ export default function UsuariosPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1320px] border-collapse">
+                <table className="w-full min-w-[1160px] border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
@@ -1557,7 +1557,7 @@ export default function UsuariosPage() {
 
                           <td className="px-5 py-4 text-center">
                             <div className="flex flex-col items-center gap-1">
-                              <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "bg-emerald-50 text-emerald-700" : (item.estado === "suspendido" ? "animate-pulse bg-amber-100 text-amber-800" : "animate-pulse bg-red-100 text-red-700")}`}>
+                              <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "bg-emerald-50 text-emerald-700" : (item.estado === "suspendido" ? "animate-pulse ring-2 ring-amber-300 bg-amber-200 text-amber-950" : "animate-pulse ring-2 ring-red-300 bg-red-200 text-red-900")}`}>
                                 {(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "Activo" : item.estado === "suspendido" ? "Suspendido" : "Inactivo"}
                               </span>
                               {item.motivoEstado && <span title={item.motivoEstado} className="max-w-[140px] truncate text-[10px] text-slate-500">{item.motivoEstado}</span>}
@@ -1566,7 +1566,7 @@ export default function UsuariosPage() {
                           </td>
 
                           <td className="px-5 py-4">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleSendCredentialsEmail(item)}
@@ -1594,21 +1594,8 @@ export default function UsuariosPage() {
                                 <IdCard size={19} />
                               </button>
 
-                              {can("usuarios", "eliminar") && <button type="button" onClick={() => handleDeleteUser(item)} title="Eliminar perfil" className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50"><Trash2 size={17} /></button>}
-                              {can("usuarios", "editar") && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEdit(item)}
-                                    className="w-10 h-10 rounded-2xl border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white flex items-center justify-center transition"
-                                    title="Editar"
-                                  >
-                                    <Edit3 size={18} />
-                                  </button>
-
-
-                                </>
-                              )}
+                              <button type="button" onClick={() => handleEdit(item)} disabled={!can("usuarios", "editar")} title="Editar usuario" className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-2 text-xs font-bold text-teal-800 hover:bg-teal-100 disabled:opacity-40"><Edit3 size={15} /> Editar</button>
+                              <button type="button" onClick={() => handleDeleteUser(item)} disabled={!can("usuarios", "eliminar")} title="Eliminar perfil" className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-40"><Trash2 size={15} /> Eliminar</button>
                             </div>
                           </td>
                         </tr>
