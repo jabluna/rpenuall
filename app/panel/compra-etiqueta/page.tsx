@@ -694,7 +694,7 @@ export default function CompraEtiquetaPage() {
           )}
 
           <section className="bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div className="px-4 sm:px-5 py-4 border-b-2 border-amber-200 bg-gradient-to-r from-amber-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra etiquetas</p>
                 <h2 className="text-2xl font-black mt-1">Etiquetas en alerta para comprar</h2>
@@ -712,75 +712,29 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="min-w-0 p-3 sm:p-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-xs xl:text-sm">
-                <thead>
-                  <tr>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Fecha</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Orden de compra</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Etiquetas agregadas</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Resumen</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr className="bg-slate-50 border border-slate-200">
-                    <td className="px-4 py-4 rounded-l-3xl border-y border-l border-slate-200 align-top">
-                      <label className="flex items-center gap-2 text-xs font-black text-[#244C5A] mb-2">
-                        <CalendarDays size={16} /> Fecha
-                      </label>
-                      <input
-                        type="date"
-                        value={fecha}
-                        onChange={(e) => setFecha(e.target.value)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                      />
-                    </td>
-
-                    <td className="px-4 py-4 border-y border-slate-200 align-top">
-                      <label className="flex items-center gap-2 text-xs font-black text-[#244C5A] mb-2">
-                        <ClipboardList size={16} /> Orden de compra
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={ordenCompra}
-                          onChange={(e) => setOrdenCompra(e.target.value.toUpperCase())}
-                          placeholder="Digitar manual"
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-black outline-none focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => openNewAlertModal()}
-                          className="w-12 h-12 rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#244C5A]/20"
-                          title="Agregar etiqueta en alerta"
-                        >
-                          <Plus size={22} />
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4 border-y border-slate-200 align-top">
-                      {alertItems.length === 0 ? (
-                        <div className="rounded-2xl bg-white border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                          No hay etiquetas en alerta agregadas. Usa el botón + o da clic en una alerta de la vista rápida.
-                        </div>
-                      ) : (
-                        <ItemsList items={alertItems} onEdit={openEditItemModal} onRemove={handleRemoveItem} />
-                      )}
-                    </td>
-
-                    <td className="px-4 py-4 rounded-r-3xl border-y border-r border-slate-200 align-top">
-                      <ResumenCard total={alertItems.length} label={`Alertas disponibles: ${alertasFiltradas.length}`} />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
+              <div className="min-w-0 space-y-4">
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><ClipboardList size={16}/> Número de orden</span><input type="text" value={ordenCompra} onChange={e => setOrdenCompra(e.target.value.toUpperCase())} placeholder="Ej. OC-001" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-xs font-black uppercase text-amber-700">Detalle de la orden</p><h4 className="text-base font-black text-slate-900">Etiquetas con alerta</h4></div><button type="button" onClick={() => openNewAlertModal()} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Agregar etiqueta</button></div>
+                  <div className="min-w-0 p-3 sm:p-4">{alertItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={alertItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
+                </div>
+              </div>
+              <aside className="h-fit space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-black uppercase tracking-widest text-amber-700">Resumen de compra</p>
+                <p className="text-4xl font-black text-slate-900">{alertItems.length}</p>
+                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
+                <div className="border-t border-amber-200 pt-3 text-sm text-slate-700"><span className="font-bold">Alertas disponibles:</span> {alertasFiltradas.length}</div>
+                <button type="button" onClick={() => handleSaveCompra("alerta")} disabled={saving || alertItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Guardar orden</button>
+              </aside>
             </div>
           </section>
 
           <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div className="px-4 sm:px-5 py-4 border-b-2 border-sky-200 bg-gradient-to-r from-sky-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra manual</p>
                 <h3 className="text-xl font-black text-slate-900 mt-1">Etiquetas para comprar sin alerta</h3>
@@ -798,70 +752,24 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="min-w-0 p-3 sm:p-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-xs xl:text-sm">
-                <thead>
-                  <tr>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Fecha</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Orden de compra</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Etiquetas agregadas</th>
-                    <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Resumen</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td className="px-4 py-4 rounded-l-3xl border-y border-l border-slate-200 align-top">
-                      <label className="flex items-center gap-2 text-xs font-black text-[#244C5A] mb-2">
-                        <CalendarDays size={16} /> Fecha
-                      </label>
-                      <input
-                        type="date"
-                        value={manualFecha}
-                        onChange={(e) => setManualFecha(e.target.value)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                      />
-                    </td>
-
-                    <td className="px-4 py-4 border-y border-slate-200 align-top">
-                      <label className="flex items-center gap-2 text-xs font-black text-[#244C5A] mb-2">
-                        <ClipboardList size={16} /> Orden de compra
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={ordenCompra}
-                          onChange={(e) => setOrdenCompra(e.target.value.toUpperCase())}
-                          placeholder="Digitar manual"
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-black outline-none focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
-                        />
-                        <button
-                          type="button"
-                          onClick={openManualModal}
-                          className="w-12 h-12 rounded-2xl bg-[#244C5A] hover:bg-[#1b3b46] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#244C5A]/20"
-                          title="Agregar etiqueta sin alerta"
-                        >
-                          <Plus size={22} />
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4 border-y border-slate-200 align-top">
-                      {manualItems.length === 0 ? (
-                        <div className="rounded-2xl bg-white border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                          No hay etiquetas sin alerta agregadas. Usa el botón + para seleccionar cliente, producto y lado.
-                        </div>
-                      ) : (
-                        <ItemsList items={manualItems} onEdit={openEditItemModal} onRemove={handleRemoveItem} />
-                      )}
-                    </td>
-
-                    <td className="px-4 py-4 rounded-r-3xl border-y border-r border-slate-200 align-top">
-                      <ResumenCard total={manualItems.length} label={`Productos cargados: ${productos.length}`} />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_280px] sm:p-5">
+              <div className="min-w-0 space-y-4">
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><CalendarDays size={16}/> Fecha de la orden</span><input type="date" value={manualFecha} onChange={e => setManualFecha(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-600"><span className="mb-2 flex items-center gap-2"><ClipboardList size={16}/> Número de orden</span><input type="text" value={ordenCompra} onChange={e => setOrdenCompra(e.target.value.toUpperCase())} placeholder="Ej. OC-001" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500"/></label>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-xs font-black uppercase text-sky-700">Detalle de la orden</p><h4 className="text-base font-black text-slate-900">Etiquetas sin alerta</h4></div><button type="button" onClick={() => openManualModal()} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-800"><Plus size={18}/> Agregar etiqueta</button></div>
+                  <div className="min-w-0 p-3 sm:p-4">{manualItems.length === 0 ? <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center"><p className="text-sm font-bold text-slate-600">Esta orden todavía no tiene etiquetas</p><p className="mt-1 text-xs text-slate-400">Selecciona «Agregar etiqueta» para comenzar.</p></div> : <ItemsList items={manualItems} onEdit={openEditItemModal} onRemove={handleRemoveItem}/>}</div>
+                </div>
+              </div>
+              <aside className="h-fit space-y-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
+                <p className="text-xs font-black uppercase tracking-widest text-sky-700">Resumen de compra</p>
+                <p className="text-4xl font-black text-slate-900">{manualItems.length}</p>
+                <p className="text-sm font-semibold text-slate-600">Etiquetas agregadas</p>
+                <div className="border-t border-sky-200 pt-3 text-sm text-slate-700"><span className="font-bold">Productos disponibles:</span> {productos.length}</div>
+                <button type="button" onClick={() => handleSaveCompra("manual")} disabled={saving || manualItems.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#244C5A] px-4 py-3 font-black text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>} Guardar orden</button>
+              </aside>
             </div>
           </section>
 
