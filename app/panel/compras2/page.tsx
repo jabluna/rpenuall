@@ -50,6 +50,7 @@ import {
 import { auth } from "@/lib/firebase";
 import { useUserPermissions } from "@/lib/useUserPermissions";
 import NoPermission from "@/components/NoPermission";
+import { claveInsumo, BODEGA_PRINCIPAL_ID } from "@/lib/multibodega/modelo";
 
 type MenuItem = {
   title: string;
@@ -204,6 +205,7 @@ type ProductoGeneralCompra = {
   producto: string;
   unidadDeEmpaque: string;
   mockupUrl: string;
+  inventarioClave?: string;
   stockReal: number;
   stockReservado: number;
   stockDisponible: number;
@@ -455,6 +457,10 @@ export default function CrearComprasAlertasPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [selectedMockup, setSelectedMockup] = useState("");
+  const [bodegasCompra, setBodegasCompra] = useState<Array<{id:string; nombre:string}>>([{id:BODEGA_PRINCIPAL_ID,nombre:"Bodega principal"}]);
+  const [bodegaCompraId, setBodegaCompraId] = useState<string>(BODEGA_PRINCIPAL_ID);
+  const [inventarioCompra, setInventarioCompra] = useState<Record<string,{stockFisico?:number;reservado?:number}>>({});
+  const [alertasListaOpen, setAlertasListaOpen] = useState(false);
 
   const userName = useMemo(() => {
     return (
@@ -475,8 +481,47 @@ export default function CrearComprasAlertasPage() {
 
   const sidebarWidth = sidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[300px]";
 
+  useEffect(() => {
+    if (loadingPermissions || !authUser) return;
+    return onValue(ref(realtimeDb, "BODEGAS"), snapshot => {
+      const raw = (snapshot.val() || {}) as Record<string,{nombre?:string;activa?:boolean;eliminada?:boolean}>;
+      const lista = Object.entries(raw).filter(([, b]) => !b.eliminada && b.activa !== false).map(([id,b]) => ({id,nombre:b.nombre || id}));
+      if (!lista.some(b => b.id === BODEGA_PRINCIPAL_ID)) lista.unshift({id:BODEGA_PRINCIPAL_ID,nombre:"Bodega principal"});
+      setBodegasCompra(lista);
+    });
+  }, [loadingPermissions, authUser, realtimeDb]);
+
+  useEffect(() => {
+    if (bodegaCompraId === BODEGA_PRINCIPAL_ID) { setInventarioCompra({}); return; }
+    setInventarioCompra({});
+    return onValue(ref(realtimeDb, "INVENTARIO_BODEGAS/" + bodegaCompraId), snapshot => {
+      setInventarioCompra(snapshot.val() || {});
+    }, () => setInventarioCompra({}));
+  }, [bodegaCompraId, realtimeDb]);
+
+  const productosBodega = useMemo(() => {
+    if (bodegaCompraId === BODEGA_PRINCIPAL_ID) return productosGenerales;
+    return productosGenerales.filter(p => p.inventarioClave && Object.prototype.hasOwnProperty.call(inventarioCompra,p.inventarioClave)).map(p => {
+      const e = inventarioCompra[p.inventarioClave!] || {};
+      const real = Math.max(0, Number(e.stockFisico) || 0);
+      const reservado = Math.max(0, Number(e.reservado) || 0);
+      return {...p,stockReal:real,stockReservado:reservado,stockDisponible:Math.max(0,real-reservado),stockEsperado:real,stockTeorico:real};
+    });
+  }, [bodegaCompraId, productosGenerales, inventarioCompra]);
+
+  const alertasBodega = useMemo(() => {
+    if (bodegaCompraId === BODEGA_PRINCIPAL_ID) return alertas;
+    return productosBodega.filter(p => p.stockDisponible <= 10).map(p => ({
+      id:p.id, activo:true, codigoProducto:p.codigoProducto,codigoProveedor:p.codigoProveedor,
+      proveedorNodo:p.proveedorNodo,nombreProveedor:p.nombreProveedor,producto:p.producto,
+      stockReal:p.stockReal,stockReservado:p.stockReservado,stockDisponible:p.stockDisponible,
+      stockEsperado:p.stockEsperado,stockTeorico:p.stockTeorico,stockDisponibleMinimo:10,stockTeoricoMinimo:10,
+      alertaDisponible:true,alertaTeorico:p.stockTeorico <= 10,mockupUrl:p.mockupUrl
+    } as AlertaBodega));
+  }, [bodegaCompraId, alertas, productosBodega]);
+
   const alertasFiltradas = useMemo(() => {
-    const base = alertas.filter((alerta) => {
+    const base = alertasBodega.filter((alerta) => {
       const stocks = getAlertStocks(alerta);
       const minimoDisponible = toNumber(alerta.stockDisponibleMinimo || 10);
       const minimoTeorico = toNumber(alerta.stockTeoricoMinimo || 10);
@@ -501,7 +546,7 @@ export default function CrearComprasAlertasPage() {
       if (providerCompare !== 0) return providerCompare;
       return normalizeText(a.producto).localeCompare(normalizeText(b.producto));
     });
-  }, [alertas]);
+  }, [alertasBodega]);
 
   const alertasModalFiltradas = useMemo(() => {
     const cleanSearch = alertSearch.trim().toLowerCase();
@@ -524,7 +569,7 @@ export default function CrearComprasAlertasPage() {
 
   const productosGeneralesFiltrados = useMemo(() => {
     const cleanSearch = search.trim().toLowerCase();
-    const base = [...productosGenerales].sort(
+    const base = [...productosBodega].sort(
       (a, b) =>
         a.codigoProveedor.localeCompare(b.codigoProveedor) ||
         a.producto.localeCompare(b.producto),
@@ -540,7 +585,7 @@ export default function CrearComprasAlertasPage() {
         producto.codigoProveedor.toLowerCase().includes(cleanSearch)
       );
     });
-  }, [productosGenerales, search]);
+  }, [productosBodega, search]);
 
   const manualProviderOptions = useMemo(() => {
     const map: Record<
@@ -622,16 +667,16 @@ export default function CrearComprasAlertasPage() {
   }, [productosGenerales, selectedManualProviderCode, search]);
 
   const selectedAlert = useMemo(() => {
-    return alertas.find((alerta) => alerta.id === selectedAlertId) || null;
-  }, [alertas, selectedAlertId]);
+    return alertasBodega.find((alerta) => alerta.id === selectedAlertId) || null;
+  }, [alertasBodega, selectedAlertId]);
 
   const selectedGeneralProduct = useMemo(() => {
     return (
-      productosGenerales.find(
+      productosBodega.find(
         (producto) => producto.id === selectedGeneralId,
       ) || null
     );
-  }, [productosGenerales, selectedGeneralId]);
+  }, [productosBodega, selectedGeneralId]);
 
   const selectedIndexData = useMemo(() => {
     if (!selectedAlert) return null;
@@ -750,7 +795,7 @@ export default function CrearComprasAlertasPage() {
 
   const modalItems = modalMode === "alerta" ? alertItems : manualItems;
 
-  const quickPerPage = 10;
+  const quickPerPage = 5;
 
   const quickTotalPages = useMemo(() => {
     return Math.max(1, Math.ceil(alertasFiltradas.length / quickPerPage));
@@ -856,6 +901,7 @@ export default function CrearComprasAlertasPage() {
                   index[key] = productoInfo;
                   generalRows.push({
                     id: key,
+                    inventarioClave: claveInsumo({proveedorId:providerCode, productoId:productCode}),
                     ...productoInfo,
                     stockReal: stock.stockReal,
                     stockReservado: stock.stockReservado,
@@ -937,7 +983,7 @@ export default function CrearComprasAlertasPage() {
 
   const openGeneralItemModal = (productId = "") => {
     const selectedProduct =
-      productosGenerales.find((producto) => producto.id === productId) || null;
+      productosBodega.find((producto) => producto.id === productId) || null;
 
     setModalMode("manual");
     setEditingItemIndex(null);
@@ -1272,6 +1318,7 @@ export default function CrearComprasAlertasPage() {
           stockEsperado: item.stockEsperado,
           stockTeorico: item.stockTeorico,
           origen: item.origen,
+          bodegaId: bodegaCompraId,
           productKey: item.productKey || null,
           alertaId: item.alertaId || null,
           agregadoAt: now,
@@ -1329,6 +1376,7 @@ export default function CrearComprasAlertasPage() {
           ordenCompra: ordenLimpia,
           fecha: fechaOrden,
           origen: origenOrden,
+          bodegaId: bodegaCompraId,
           estado: "creada",
           itemsCompra: buildItems(itemsSeleccionados),
           creadoAt: now,
@@ -1482,6 +1530,14 @@ export default function CrearComprasAlertasPage() {
             </div>
           )}
 
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-white p-3">
+            <Boxes size={20} className="text-emerald-700" />
+            <label htmlFor="bodega-compra" className="text-sm font-bold text-slate-700">Bodega para consultar y comprar</label>
+            <select id="bodega-compra" value={bodegaCompraId} onChange={e => {setBodegaCompraId(e.target.value);setItems([]);setSelectedAlertId("");setSelectedGeneralId("");setQuickPage(1);}} className="min-w-[220px] flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold">
+              {bodegasCompra.map(b => <option key={b.id} value={b.id}>{b.nombre} ({b.id})</option>)}
+            </select>
+            <span className="text-xs text-slate-500">Las existencias y listas corresponden a la bodega seleccionada.</span>
+          </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <section className="bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-5 sm:px-6 py-5 border-b border-slate-200">
@@ -1552,6 +1608,7 @@ export default function CrearComprasAlertasPage() {
                 </h3>
               </div>
 
+              <button type="button" onClick={() => setAlertasListaOpen(true)} className="mx-5 mb-4 inline-flex items-center gap-2 rounded-lg bg-[#244C5A] px-4 py-2 text-sm font-bold text-white"><Eye size={16}/> Consultar lista completa ({alertasFiltradas.length})</button>
               {loadingAlertas ? (
                 <div className="p-8 flex items-center justify-center gap-3 text-slate-500 font-semibold">
                   <Loader2 className="animate-spin" size={22} />
@@ -1568,7 +1625,7 @@ export default function CrearComprasAlertasPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[330px]">
                   <table className="w-full min-w-[820px] border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
@@ -1786,6 +1843,25 @@ export default function CrearComprasAlertasPage() {
         </section>
       </section>
 
+      {alertasListaOpen && (
+        <div className="fixed inset-0 z-[998] flex items-center justify-center bg-slate-950/60 p-3" onMouseDown={e => {if(e.target === e.currentTarget)setAlertasListaOpen(false)}}>
+          <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b p-4">
+              <div><h3 className="text-lg font-black">Productos en alerta · {bodegasCompra.find(b=>b.id===bodegaCompraId)?.nombre}</h3><p className="text-xs text-slate-500">Selecciona un producto para preparar la compra</p></div>
+              <button type="button" onClick={()=>setAlertasListaOpen(false)} className="rounded-lg bg-slate-100 p-2" aria-label="Cerrar"><X size={19}/></button>
+            </div>
+            <div className="overflow-y-auto p-3">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {alertasFiltradas.map(a => {const st=getAlertStocks(a);return <button type="button" key={a.id} onClick={()=>{setAlertasListaOpen(false);openNewItemModal(a.id)}} className="rounded-xl border border-slate-200 p-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50">
+                  <div className="flex justify-between gap-2"><span className="text-sm font-bold text-slate-900">{a.codigoProducto} · {a.producto}</span><span className="shrink-0 text-xs font-bold text-red-600">Alerta</span></div>
+                  <p className="mt-1 text-xs text-slate-500">{a.nombreProveedor || a.proveedorNodo}</p>
+                  <div className="mt-2 flex gap-4 text-xs"><span>Real: <b>{formatNumber(st.stockReal)}</b></span><span>Disponible: <b>{formatNumber(st.stockDisponible)}</b></span><span>Esperado: <b>{formatNumber(st.stockEsperado)}</b></span></div>
+                </button>})}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-[32px] bg-white shadow-2xl">
