@@ -279,7 +279,7 @@ export default function GestionComprasEtiquetasPage() {
   const [historialModal, setHistorialModal] = useState<HistorialModal | null>(
     null,
   );
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [detalleCompraId, setDetalleCompraId] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -622,10 +622,6 @@ export default function GestionComprasEtiquetasPage() {
     return { total, aceptados, rechazados };
   };
 
-  const toggleExpanded = (compraId: string) => {
-    setExpanded((current) => ({ ...current, [compraId]: !current[compraId] }));
-  };
-
   const handleLogout = async () => {
     await signOut(auth);
     router.replace("/");
@@ -817,7 +813,7 @@ export default function GestionComprasEtiquetasPage() {
                       const items = compra.items || [];
                       const primerItem = items[0];
                       const resumen = resumenEstadosCompra(compra);
-                      const estaAbierta = !!expanded[compra.id];
+                      const estaAbierta = detalleCompraId === compra.id;
 
                       return (
                         <Fragment key={compra.id}>
@@ -942,17 +938,182 @@ export default function GestionComprasEtiquetasPage() {
                             <td className="px-4 py-4 text-right">
                               <button
                                 type="button"
-                                onClick={() => toggleExpanded(compra.id)}
+                                onClick={() => setDetalleCompraId(compra.id)}
                                 className="rounded-2xl bg-[#244C5A] text-white px-4 py-2 text-xs font-black hover:bg-[#1b3b46] transition"
                               >
-                                {estaAbierta ? "Ocultar" : "Desplegar"}
+                                <><Eye size={15} className="mr-1 inline"/> Ver detalle</>
                               </button>
                             </td>
                           </tr>
 
-                          {estaAbierta && (
-                            <tr className="border-b border-emerald-200 bg-emerald-50/70">
-                              <td colSpan={6} className="p-4">
+
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="lg:hidden divide-y divide-slate-200">
+                {comprasPaginadas.map((compra) => {
+                  const gestionCompra = obtenerGestionCompra(compra.id);
+                  const items = compra.items || [];
+                  const primerItem = items[0];
+                  const resumen = resumenEstadosCompra(compra);
+                  const estaAbierta = detalleCompraId === compra.id;
+                  return (
+                    <div key={`${compra.id}-mobile`} className={`p-4 transition ${estaAbierta ? "bg-emerald-50 border-l-4 border-emerald-400" : "bg-white"}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-black uppercase text-slate-400">
+                            {gestionCompra.fechaGestion || hoy()}
+                          </p>
+                          <h3 className="text-xl font-black text-[#244C5A] mt-1">
+                            {compra.consecutivo}
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Estado:{" "}
+                            <strong>{compra.estado || "en_proceso"}</strong>
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {compra.creadoPor || "Usuario"}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
+                          {items.length} ítems
+                        </span>
+                      </div>
+
+                      {primerItem && (
+                        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                          <p className="text-xs font-black text-slate-900">
+                            {primerItem.codigoEnvase || primerItem.codigoProducto || "Sin código"}
+                          </p>
+                          <p className="text-sm text-slate-600 mt-1">
+                            {primerItem.descripcion || "Sin descripción"}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Cliente:{" "}
+                            <strong>
+                              {primerItem.cliente || primerItem.clienteNombre || primerItem.codigoCliente || "Sin cliente"}
+                            </strong>{" "}
+                            · Compra: <strong>{primerItem.total || 0}</strong>
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex flex-col gap-2">
+                        {(() => {
+                          const factura = obtenerFacturaCompra(compra);
+                          const uploadId = `${compra.id}-factura_compra_etiquetas-general`;
+                          return (
+                            <>
+                              <label className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-3 py-3 text-xs font-black text-slate-600 cursor-pointer">
+                                {uploadingKey === uploadId ? (
+                                  <Loader2 className="animate-spin" size={15} />
+                                ) : (
+                                  <Upload size={15} />
+                                )}
+                                {factura ? "Cambiar archivo" : "Adjuntar archivo"}
+                                <input
+                                  type="file"
+                                  accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx"
+                                  className="hidden"
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (file) subirArchivo(compra.id, "factura_compra_etiquetas", file);
+                                    event.currentTarget.value = "";
+                                  }}
+                                />
+                              </label>
+
+                              {factura?.url ? (
+                                <a
+                                  href={factura.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-3 py-3 text-xs font-black text-slate-600"
+                                >
+                                  <Eye size={15} /> Ver archivo
+                                </a>
+                              ) : (
+                                <div className="rounded-2xl bg-yellow-50 border border-yellow-100 px-3 py-3 text-xs font-black text-yellow-700 text-center">
+                                  No se ha adjuntado archivo
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="mt-4 text-xs font-black text-slate-600">
+                        <span className="text-green-700">
+                          {resumen.aceptados}
+                        </span>{" "}
+                        aceptados ·{" "}
+                        <span className="text-red-700">
+                          {resumen.rechazados}
+                        </span>{" "}
+                        rechazados
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setDetalleCompraId(compra.id)}
+                        className="w-full mt-4 rounded-2xl bg-[#244C5A] text-white px-4 py-3 text-sm font-black"
+                      >
+                        Ver detalle de la orden
+                      </button>
+
+
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-sm text-slate-500 font-semibold">
+                  Mostrando {comprasPaginadas.length} de{" "}
+                  {comprasFiltradas.length} órdenes.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={pagina <= 1}
+                    onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                    className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-black text-slate-600 disabled:opacity-40"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pagina >= totalPaginas}
+                    onClick={() =>
+                      setPagina((p) => Math.min(totalPaginas, p + 1))
+                    }
+                    className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-black text-slate-600 disabled:opacity-40"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+      </section>
+
+      {detalleCompraId && (() => {
+        const compra = compras.find(c => c.id === detalleCompraId);
+        if (!compra) return null;
+        const items = compra.items || [];
+        return (
+          <div className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-5">
+            <div className="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between gap-4 bg-[#244C5A] px-5 py-4 text-white">
+                <div><p className="text-xs font-black uppercase tracking-widest text-emerald-200">Gestión de compra de etiquetas</p><h3 className="text-xl font-black">Orden {compra.consecutivo}</h3><p className="text-xs text-white/70">{items.length} etiquetas · Verificación individual por proceso</p></div>
+                <button type="button" onClick={() => setDetalleCompraId(null)} className="rounded-xl bg-white/15 p-2.5 hover:bg-white/25" aria-label="Cerrar detalle"><X size={21}/></button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto bg-slate-50 p-3 sm:p-5">
                                 <div className="rounded-3xl border border-emerald-200 bg-emerald-50 overflow-hidden shadow-sm shadow-emerald-100">
                                   <div className="px-4 py-3 border-b border-emerald-200 bg-emerald-50">
                                     <p className="font-black text-slate-900">
@@ -1139,327 +1300,13 @@ export default function GestionComprasEtiquetasPage() {
                                     </table>
                                   </div>
                                 </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
+
               </div>
-
-              <div className="lg:hidden divide-y divide-slate-200">
-                {comprasPaginadas.map((compra) => {
-                  const gestionCompra = obtenerGestionCompra(compra.id);
-                  const items = compra.items || [];
-                  const primerItem = items[0];
-                  const resumen = resumenEstadosCompra(compra);
-                  const estaAbierta = !!expanded[compra.id];
-                  return (
-                    <div key={`${compra.id}-mobile`} className={`p-4 transition ${estaAbierta ? "bg-emerald-50 border-l-4 border-emerald-400" : "bg-white"}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-black uppercase text-slate-400">
-                            {gestionCompra.fechaGestion || hoy()}
-                          </p>
-                          <h3 className="text-xl font-black text-[#244C5A] mt-1">
-                            {compra.consecutivo}
-                          </h3>
-                          <p className="text-sm text-slate-600">
-                            Estado:{" "}
-                            <strong>{compra.estado || "en_proceso"}</strong>
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {compra.creadoPor || "Usuario"}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
-                          {items.length} ítems
-                        </span>
-                      </div>
-
-                      {primerItem && (
-                        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                          <p className="text-xs font-black text-slate-900">
-                            {primerItem.codigoEnvase || primerItem.codigoProducto || "Sin código"}
-                          </p>
-                          <p className="text-sm text-slate-600 mt-1">
-                            {primerItem.descripcion || "Sin descripción"}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Cliente:{" "}
-                            <strong>
-                              {primerItem.cliente || primerItem.clienteNombre || primerItem.codigoCliente || "Sin cliente"}
-                            </strong>{" "}
-                            · Compra: <strong>{primerItem.total || 0}</strong>
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="mt-4 flex flex-col gap-2">
-                        {(() => {
-                          const factura = obtenerFacturaCompra(compra);
-                          const uploadId = `${compra.id}-factura_compra_etiquetas-general`;
-                          return (
-                            <>
-                              <label className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 px-3 py-3 text-xs font-black text-slate-600 cursor-pointer">
-                                {uploadingKey === uploadId ? (
-                                  <Loader2 className="animate-spin" size={15} />
-                                ) : (
-                                  <Upload size={15} />
-                                )}
-                                {factura ? "Cambiar archivo" : "Adjuntar archivo"}
-                                <input
-                                  type="file"
-                                  accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx"
-                                  className="hidden"
-                                  onChange={(event) => {
-                                    const file = event.target.files?.[0];
-                                    if (file) subirArchivo(compra.id, "factura_compra_etiquetas", file);
-                                    event.currentTarget.value = "";
-                                  }}
-                                />
-                              </label>
-
-                              {factura?.url ? (
-                                <a
-                                  href={factura.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-3 py-3 text-xs font-black text-slate-600"
-                                >
-                                  <Eye size={15} /> Ver archivo
-                                </a>
-                              ) : (
-                                <div className="rounded-2xl bg-yellow-50 border border-yellow-100 px-3 py-3 text-xs font-black text-yellow-700 text-center">
-                                  No se ha adjuntado archivo
-                                </div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      <div className="mt-4 text-xs font-black text-slate-600">
-                        <span className="text-green-700">
-                          {resumen.aceptados}
-                        </span>{" "}
-                        aceptados ·{" "}
-                        <span className="text-red-700">
-                          {resumen.rechazados}
-                        </span>{" "}
-                        rechazados
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleExpanded(compra.id)}
-                        className="w-full mt-4 rounded-2xl bg-[#244C5A] text-white px-4 py-3 text-sm font-black"
-                      >
-                        {estaAbierta
-                          ? "Ocultar productos"
-                          : "Desplegar productos"}
-                      </button>
-
-                      {estaAbierta && (
-                        <div className="mt-4 space-y-4 rounded-3xl border border-emerald-200 bg-emerald-50/70 p-3">
-                          {items.map((item, index) => {
-                            const key = itemKey(item, index);
-                            return (
-                              <div
-                                key={`${compra.id}-mobile-item-${key}`}
-                                className="rounded-3xl border border-slate-200 overflow-hidden"
-                              >
-                                <div className="p-4 bg-slate-50 border-b border-slate-200">
-                                  <p className="font-black text-slate-900">
-                                    {item.codigoEnvase || item.codigoProducto || "Sin código"}
-                                  </p>
-                                  <p className="text-sm text-slate-600 mt-1">
-                                    {item.descripcion || item.producto || "Sin descripción"}
-                                  </p>
-                                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-                                    <div>
-                                      <p className="text-slate-400 font-black uppercase">
-                                        Cliente
-                                      </p>
-                                      <p className="font-black text-slate-700">
-                                        {item.cliente || item.clienteNombre || item.codigoCliente || "N/A"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-slate-400 font-black uppercase">
-                                        Compra
-                                      </p>
-                                      <p className="font-black text-slate-700">
-                                        {item.total || 0}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="p-3 space-y-3">
-                                  {procesos.map((proceso) => {
-                                    const estado = obtenerEstado(
-                                      compra.id,
-                                      key,
-                                      proceso.key,
-                                    );
-                                    const historial =
-                                      estado.historialRechazos || [];
-                                    const uploadId = `${compra.id}-comprobante_pago-${key}`;
-                                    return (
-                                      <div
-                                        key={`${compra.id}-mobile-${key}-${proceso.key}`}
-                                        className="rounded-2xl border border-slate-200 p-3"
-                                      >
-                                        <div className="flex items-center justify-between gap-3">
-                                          <p className="font-black text-sm text-slate-900">
-                                            {proceso.titulo}
-                                          </p>
-                                          <span
-                                            className={`rounded-full border px-2 py-1 text-[10px] font-black ${estadoClass(estado.estado)}`}
-                                          >
-                                            {mostrarEstado(estado.estado)}
-                                          </span>
-                                        </div>
-                                        <select
-                                          value={estado.estado}
-                                          onChange={(event) =>
-                                            solicitarEstado(
-                                              compra.id,
-                                              key,
-                                              proceso.key,
-                                              proceso.titulo,
-                                              nombreItem(item),
-                                              event.target
-                                                .value as EstadoGestion,
-                                            )
-                                          }
-                                          className={`w-full mt-3 rounded-2xl border px-3 py-3 text-sm font-black outline-none ${estadoClass(estado.estado)}`}
-                                        >
-                                          <option value="sin_verificar">
-                                            Sin verificar
-                                          </option>
-                                          <option value="aceptado">
-                                            Aceptado
-                                          </option>
-                                          <option value="rechazado">
-                                            Rechazado
-                                          </option>
-                                        </select>
-                                        {proceso.permiteArchivo && (
-                                          <div className="mt-2 flex flex-wrap gap-2">
-                                            <label className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-2.5 py-2 text-[11px] font-black text-slate-600 cursor-pointer">
-                                              {uploadingKey === uploadId ? (
-                                                <Loader2
-                                                  className="animate-spin"
-                                                  size={14}
-                                                />
-                                              ) : (
-                                                <Upload size={14} />
-                                              )}
-                                              Adjuntar
-                                              <input
-                                                type="file"
-                                                accept="application/pdf,image/*"
-                                                className="hidden"
-                                                onChange={(event) => {
-                                                  const file =
-                                                    event.target.files?.[0];
-                                                  if (file)
-                                                    subirArchivo(
-                                                      compra.id,
-                                                      "comprobante_pago",
-                                                      file,
-                                                      key,
-                                                    );
-                                                  event.currentTarget.value =
-                                                    "";
-                                                }}
-                                              />
-                                            </label>
-                                            {estado.archivo?.url && (
-                                              <a
-                                                href={estado.archivo.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-2.5 py-2 text-[11px] font-black text-slate-600"
-                                              >
-                                                <FileText size={14} /> Ver
-                                              </a>
-                                            )}
-                                          </div>
-                                        )}
-                                        {estado.meta && (
-                                          <div className="mt-2 text-[11px] text-slate-500 leading-4">
-                                            <p className="font-bold">
-                                              {estado.meta.usuario}
-                                            </p>
-                                            <p>
-                                              {formatoFechaHora(
-                                                estado.meta.fecha,
-                                              )}
-                                            </p>
-                                          </div>
-                                        )}
-                                        {historial.length > 0 && (
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              setHistorialModal({
-                                                titulo: `${proceso.titulo} · ${nombreItem(item)}`,
-                                                historial,
-                                              })
-                                            }
-                                            className="mt-2 text-[11px] text-red-600 font-black underline"
-                                          >
-                                            Ver rechazos ({historial.length})
-                                          </button>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-sm text-slate-500 font-semibold">
-                  Mostrando {comprasPaginadas.length} de{" "}
-                  {comprasFiltradas.length} órdenes.
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={pagina <= 1}
-                    onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                    className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-black text-slate-600 disabled:opacity-40"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pagina >= totalPaginas}
-                    onClick={() =>
-                      setPagina((p) => Math.min(totalPaginas, p + 1))
-                    }
-                    className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-black text-slate-600 disabled:opacity-40"
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </section>
-      </section>
+              <div className="flex shrink-0 justify-end border-t border-slate-200 bg-white px-5 py-3"><button type="button" onClick={() => setDetalleCompraId(null)} className="rounded-xl bg-[#244C5A] px-5 py-2.5 text-sm font-black text-white">Cerrar detalle</button></div>
+            </div>
+          </div>
+        );
+      })()}
 
       {rechazoModal && (
         <div className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center px-4">
