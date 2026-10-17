@@ -848,6 +848,12 @@ function AlertCard({
 }) {
   const [abierto, setAbierto] = useState(false);
   const pendientes = items.length;
+  useEffect(() => {
+    if (!abierto) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setAbierto(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [abierto]);
   return (
     <>
       <button
@@ -876,11 +882,11 @@ function AlertCard({
       </button>
       {abierto && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px] sm:p-6"
+          className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-slate-950/60 p-2 backdrop-blur-[2px] sm:p-4"
           onMouseDown={(event) => { if (event.target === event.currentTarget) setAbierto(false); }}
         >
-          <section role="dialog" aria-modal="true" aria-label={titulo} className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
+          <section role="dialog" aria-modal="true" aria-label={titulo} className="mx-auto my-1 w-full max-w-5xl rounded-xl border border-emerald-200 bg-white shadow-2xl sm:my-3">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 rounded-t-xl border-b border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur sm:px-4">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-[#244C5A]"><Icon size={19} /></div>
                 <div className="min-w-0">
@@ -893,8 +899,8 @@ function AlertCard({
                 <button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar detalle" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100"><X size={18} /></button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5">
-              <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="p-3 sm:p-4">
+              <div className="mb-3 grid grid-cols-3 gap-2">
                 {stats.map((stat) => <MiniStat key={stat.label} {...stat} />)}
               </div>
               <ListaAlertasCompacta items={items} vacio={vacio} porPagina={porPagina} />
@@ -914,10 +920,10 @@ function MiniStat({ label, value, tone }: { label: string; value: number; tone: 
   }[tone];
 
   return (
-    <div className={`rounded-xl border px-3 py-2 ${classes}`}>
+    <div className={`rounded-lg border px-2.5 py-2 ${classes}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-black uppercase truncate">{label}</p>
-        <p className="text-xl font-black leading-none">{value}</p>
+        <p className="text-lg font-black leading-none">{value}</p>
       </div>
     </div>
   );
@@ -997,8 +1003,8 @@ function ListaAlertasCompacta({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 overflow-hidden">
-      <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 space-y-2">
+    <div className="rounded-lg border border-slate-200 overflow-hidden">
+      <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-black text-slate-700">Últimas alertas</p>
           <span className="rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-black text-slate-500">{itemsFiltrados.length} de {items.length}</span>
