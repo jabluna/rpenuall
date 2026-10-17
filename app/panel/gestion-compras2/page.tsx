@@ -1405,7 +1405,7 @@ export default function GestionComprasBodegaPage() {
           </div>
         </header>
 
-        <section className="max-w-[1500px] mx-auto px-4 sm:px-8 py-5 sm:py-6 space-y-5">
+        <section className="w-full max-w-none mx-auto px-3 sm:px-5 xl:px-6 py-5 sm:py-6 space-y-5">
           {(error || message) && (
             <div className="space-y-3">
               {error && (
@@ -1471,26 +1471,26 @@ export default function GestionComprasBodegaPage() {
               </div>
             ) : (
               <>
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full min-w-[1180px] border-collapse text-sm">
+                <div className="hidden lg:block w-full min-w-0">
+                  <table className="w-full table-fixed border-collapse text-xs xl:text-sm">
                     <thead>
                       <tr className="bg-emerald-50 border-b border-emerald-200">
-                        <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[250px]">
+                        <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[22%]">
                           Fecha / evidencia de compra
                         </th>
-                        <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[210px]">
+                        <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[17%]">
                           Consecutivo / estado
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
                           Primer insumo a comprar
                         </th>
-                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[160px]">
+                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[11%]">
                           Productos
                         </th>
-                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[190px]">
+                        <th className="text-center px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[13%]">
                           Estado
                         </th>
-                        <th className="text-right px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[150px]">
+                        <th className="text-right px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 w-[10%]">
                           Acción
                         </th>
                       </tr>
@@ -1684,8 +1684,8 @@ export default function GestionComprasBodegaPage() {
                                       </p>
                                     </div>
                                     {renderProcesosGeneralesOrden(compra)}
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full min-w-[1150px] border-collapse">
+                                    <div className="w-full min-w-0">
+                                      <table className="w-full table-fixed border-collapse text-xs xl:text-sm">
                                         <thead>
                                           <tr className="bg-slate-50 border-b border-slate-200">
                                             <th className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 w-[250px]">
@@ -1697,7 +1697,7 @@ export default function GestionComprasBodegaPage() {
                                             {procesosProducto.map((proceso) => (
                                               <th
                                                 key={`${compra.id}-head-${proceso.key}`}
-                                                className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500 min-w-[175px]"
+                                                className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500"
                                               >
                                                 {proceso.titulo}
                                               </th>
