@@ -673,57 +673,19 @@ export default function CompraEtiquetaPage() {
         userRole={(profile as any)?.rolNombre || (profile as any)?.role || (profile as any)?.rol || "Sin rol"}
       />
 
-      <section className={`${sidebarWidth} transition-all duration-300`}>
-        <header className="bg-[#244C5A] text-white">
-          <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
-                aria-label="Abrir menú"
-              >
-                <Menu size={22} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => router.push("/panel")}
-                className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
-                aria-label="Volver al panel"
-              >
-                <ArrowLeft size={22} />
-              </button>
-
-              <div className="hidden sm:block bg-white/10 border border-white/15 rounded-3xl px-5 py-2.5">
-                <Image src="/logo.png" alt="Nuall" width={115} height={56} priority />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-white/65">Panel administrativo / Etiquetas</p>
-                <h1 className="text-xl sm:text-3xl font-black truncate">Crear compra de etiquetas</h1>
-              </div>
+      <section className={`${sidebarWidth} min-w-0 pt-16 lg:pt-0 transition-all duration-300`}>
+        <header className="border-b border-slate-200 bg-white">
+          <div className="flex w-full items-center justify-between gap-4 px-4 py-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <button type="button" onClick={() => setSidebarOpen(true)} className="rounded-xl bg-[#244C5A] p-2.5 text-white lg:hidden" aria-label="Abrir menú"><Menu size={21}/></button>
+              <button type="button" onClick={() => router.push("/panel")} className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-[#244C5A]" aria-label="Volver al panel"><ArrowLeft size={21}/></button>
+              <div className="min-w-0"><p className="text-xs font-bold text-emerald-700">Compras / Etiquetas</p><h1 className="truncate text-lg font-black text-[#244C5A] sm:text-2xl">Crear compra de etiquetas</h1></div>
             </div>
-
-            <div className="hidden md:flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-bold truncate max-w-[220px]">{userName}</p>
-                <p className="text-xs text-white/60 truncate max-w-[220px]">{authUser?.email}</p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl px-4 py-3 font-semibold transition"
-              >
-                <LogOut size={18} />
-                Salir
-              </button>
-            </div>
+            <div className="hidden items-center gap-3 md:flex"><div className="text-right"><p className="max-w-[220px] truncate text-sm font-bold text-slate-800">{userName}</p><p className="max-w-[220px] truncate text-xs text-slate-500">{authUser?.email}</p></div><button type="button" onClick={handleLogout} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-[#244C5A]"><LogOut size={17}/> Salir</button></div>
           </div>
         </header>
 
-        <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
+        <section className="w-full max-w-none min-w-0 mx-auto px-3 sm:px-6 py-5">
           {(error || message) && (
             <div className="mb-5 space-y-2">
               {error && <div className="rounded-2xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -732,7 +694,7 @@ export default function CompraEtiquetaPage() {
           )}
 
           <section className="bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 sm:px-6 py-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra etiquetas</p>
                 <h2 className="text-2xl font-black mt-1">Etiquetas en alerta para comprar</h2>
@@ -750,8 +712,8 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 overflow-x-auto">
-              <table className="w-full min-w-[980px] border-separate border-spacing-y-3">
+            <div className="min-w-0 p-3 sm:p-4 overflow-x-auto">
+              <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-xs xl:text-sm">
                 <thead>
                   <tr>
                     <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Fecha</th>
@@ -818,7 +780,7 @@ export default function CompraEtiquetaPage() {
           </section>
 
           <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 sm:px-6 py-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Orden de compra manual</p>
                 <h3 className="text-xl font-black text-slate-900 mt-1">Etiquetas para comprar sin alerta</h3>
@@ -836,8 +798,8 @@ export default function CompraEtiquetaPage() {
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 overflow-x-auto">
-              <table className="w-full min-w-[980px] border-separate border-spacing-y-3">
+            <div className="min-w-0 p-3 sm:p-4 overflow-x-auto">
+              <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-xs xl:text-sm">
                 <thead>
                   <tr>
                     <th className="text-left px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-500">Fecha</th>
@@ -904,7 +866,7 @@ export default function CompraEtiquetaPage() {
           </section>
 
           <section className="mt-6 bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 sm:px-6 py-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="px-4 sm:px-5 py-4 border-b border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">Vista rápida</p>
                 <h3 className="text-xl font-black text-slate-900 mt-1">Alertas de etiquetas disponibles</h3>
@@ -935,7 +897,7 @@ export default function CompraEtiquetaPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[920px] border-collapse">
+                <table className="w-full min-w-[760px] border-collapse text-xs xl:text-sm">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-4 py-2 text-[11px] font-black uppercase tracking-wide text-slate-500">Cliente</th>
@@ -1003,8 +965,8 @@ export default function CompraEtiquetaPage() {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-4">
+          <div className="w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl bg-slate-50 shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-[#244C5A] to-emerald-800 border-b border-emerald-700 px-5 py-4 flex items-center justify-between gap-4 text-white">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#244C5A]">
                   {editingItemIndex !== null ? "Editar etiqueta" : "Agregar etiqueta"}
