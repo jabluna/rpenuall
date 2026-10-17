@@ -24,3 +24,45 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* NUALL: identidad visual única para los menús laterales del panel. */
+aside:has(> div > nav) > div > div:has(> .bg-white.rounded-3xl) {
+  display: none;
+}
+aside:has(> div > nav) nav {
+  padding: 12px 12px 14px;
+}
+aside:has(> div > nav) nav > a,
+aside:has(> div > nav) nav > div > button,
+aside:has(> div > nav) nav > div > div > a {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 9px 12px !important;
+  transition: background-color .15s, color .15s !important;
+}
+aside:has(> div > nav) nav > a {
+  background: transparent !important;
+  color: rgba(255,255,255,.82) !important;
+}
+aside:has(> div > nav) nav > a:hover,
+aside:has(> div > nav) nav > div > button:hover,
+aside:has(> div > nav) nav > div > div > a:hover {
+  background: rgba(255,255,255,.07) !important;
+  color: white !important;
+}
+aside:has(> div > nav) nav > div > div > a {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+aside:has(> div > nav) nav > div > div > a[aria-current="page"] {
+  background: rgba(255,255,255,.11) !important;
+  border-left: 2px solid #6ee7b7 !important;
+  color: white !important;
+}
+aside:has(> div > nav) > div > div:last-child button {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
