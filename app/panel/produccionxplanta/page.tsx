@@ -415,6 +415,8 @@ export default function ProduccionPorPlantaPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [dragging, setDragging] = useState<DragPayload | null>(null);
+  const [dragOverPlant, setDragOverPlant] = useState<Planta | null>(null);
+  const [showCronograma, setShowCronograma] = useState(false);
   const [bloques, setBloques] = useState<BloqueProgramado[]>([]);
   const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>(null);
   const [blockModal, setBlockModal] = useState<BlockModalState>(null);
@@ -758,6 +760,7 @@ export default function ProduccionPorPlantaPage() {
 
   const handleDrop = async (event: DragEvent<HTMLElement>, targetPlant: Planta, targetUid?: string) => {
     event.preventDefault();
+    setDragOverPlant(null);
 
     let payload = dragging;
     try {
@@ -901,7 +904,7 @@ export default function ProduccionPorPlantaPage() {
             </div>
           )}
 
-          <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 p-4 sm:p-5">
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
               <div>
                 <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">Cronograma</p>
@@ -918,7 +921,8 @@ export default function ProduccionPorPlantaPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <button type="button" onClick={() => setShowCronograma((value) => !value)} className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-[#244C5A] hover:bg-slate-100"><CalendarDays size={15} /> {showCronograma ? "Ocultar cronograma" : "Ver cronograma por planta"} <ChevronDown size={15} className={showCronograma ? "rotate-180 transition-transform" : "transition-transform"} /></button>
+            {showCronograma && <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
               {plantas.map((plant) => {
                 const theme = plantTheme[plant];
                 const ordenesProgramadas = cards[plant].filter((card) => card.fechaProgramada && card.horaInicio && card.horaFin);
@@ -963,26 +967,27 @@ export default function ProduccionPorPlantaPage() {
                   </div>
                 );
               })}
-            </div>
+            </div>}
           </section>
 
-          <section className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5">
+          <section className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {plantas.map((plant) => {
               const theme = plantTheme[plant];
 
               return (
               <div
                 key={plant}
-                onDragOver={(event) => event.preventDefault()}
+                onDragOver={(event) => { event.preventDefault(); if (dragOverPlant !== plant) setDragOverPlant(plant); }}
+                onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragOverPlant(null); }}
                 onDrop={(event) => handleDrop(event, plant)}
-                className={`rounded-[24px] sm:rounded-[30px] border ${theme.border} ${theme.panel} shadow-sm overflow-hidden min-h-[520px] sm:min-h-[680px]`}
+                className={`min-w-0 rounded-2xl border ${theme.border} ${theme.panel} shadow-sm overflow-hidden min-h-[280px] transition-all duration-150 ${dragOverPlant === plant && dragging ? "ring-2 ring-emerald-500 ring-offset-2 bg-emerald-50" : ""}`}
               >
-                <div className={`px-3 sm:px-5 py-4 border-b ${theme.header} flex items-center justify-between gap-3`}>
+                <div className={`px-3 py-3 border-b ${theme.header} flex items-center justify-between gap-2`}>
                   <div>
                     <p className={`text-xs font-black uppercase tracking-wide ${theme.label}`}>
                       Producción
                     </p>
-                    <h2 className={`text-base sm:text-xl font-black ${theme.title}`}>{plant}</h2>
+                    <h2 className={`text-sm sm:text-base font-black ${theme.title}`}>{plant}</h2>
                   </div>
                   <span className={`rounded-full ${theme.badge} px-3 py-1 text-xs font-black`}>
                     {cards[plant].length}
@@ -999,16 +1004,16 @@ export default function ProduccionPorPlantaPage() {
                     Arrastra aquí órdenes asignadas a {plant.toLowerCase()}.
                   </div>
                 ) : (
-                  <div className="p-2 sm:p-4 space-y-3">
+                  <div className="p-2 space-y-2">
                     {cards[plant].map((card) => (
                       <div
                         key={card.uid}
                         draggable
                         onDragStart={(event) => handleDragStart(event, card)}
-                        onDragEnd={() => setDragging(null)}
+                        onDragEnd={() => { setDragging(null); setDragOverPlant(null); }}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => handleDrop(event, plant, card.uid)}
-                        className={`w-full text-left rounded-2xl sm:rounded-3xl border px-2.5 sm:px-4 py-3 sm:py-4 shadow-sm transition cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-md ${
+                        className={`w-full min-w-0 text-left rounded-xl border px-2.5 py-2.5 shadow-sm transition cursor-grab active:cursor-grabbing hover:shadow-md ${
                           savingUid === card.uid
                             ? theme.cardSaving
                             : theme.cardNormal
@@ -1023,13 +1028,13 @@ export default function ProduccionPorPlantaPage() {
                               </p>
                               {savingUid === card.uid && <Loader2 className="animate-spin text-[#244C5A]" size={16} />}
                             </div>
-                            <p className="text-xs sm:text-sm font-black text-slate-900 mt-1 line-clamp-2">
+                            <p className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">
                               {card.producto}
                             </p>
                             <p className="text-[11px] sm:text-xs text-slate-500 mt-2 truncate">
                               {card.cliente}
                             </p>
-                            <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-black">
+                            <div className="mt-2 flex flex-wrap gap-1 text-[10px] font-bold">
                               <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-1">
                                 {card.codigoProducto}
                               </span>
@@ -1048,12 +1053,12 @@ export default function ProduccionPorPlantaPage() {
                                 event.stopPropagation();
                                 openScheduleModal(card);
                               }}
-                              className={`mt-3 w-full rounded-2xl border px-3 py-2 text-[11px] font-black transition flex items-center justify-center gap-2 ${theme.button}`}
+                              className={`mt-2 w-full rounded-lg border px-2 py-1.5 text-[11px] font-bold transition flex items-center justify-center gap-1 ${theme.button}`}
                             >
                               <Clock size={15} />
                               {card.fechaProgramada ? "Cambiar horario" : "Asignar día y hora"}
                             </button>
-                            <p className="mt-2 text-[10px] text-slate-400 font-semibold">
+                            <p className="mt-1 text-[10px] text-slate-400 font-semibold">
                               {card.fechaProgramada ? formatSchedule(card.fechaProgramada, card.horaInicio, card.horaFin) : "Sin horario asignado"}
                             </p>
                           </div>
