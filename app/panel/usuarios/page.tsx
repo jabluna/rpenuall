@@ -55,6 +55,7 @@ import {
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   orderBy,
@@ -86,6 +87,10 @@ type AppUser = {
   rolId: string;
   rolNombre: string;
   activo: boolean;
+  estado?: "activo" | "suspendido" | "inactivo";
+  motivoEstado?: string;
+  soporteEstadoUrl?: string;
+  soporteEstadoNombre?: string;
   passwordTemporal?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -99,6 +104,8 @@ type UserForm = {
   fechaCumpleanos: string;
   rolId: string;
   password: string;
+  estado: "activo" | "suspendido" | "inactivo";
+  motivoEstado: string;
 };
 
 type MenuItem = {
@@ -333,8 +340,11 @@ export default function UsuariosPage() {
     fechaCumpleanos: "",
     rolId: "",
     password: "",
+    estado: "activo",
+    motivoEstado: "",
   });
 
+  const [supportFile, setSupportFile] = useState<File | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState(defaultPhoto);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -469,8 +479,12 @@ export default function UsuariosPage() {
       fechaCumpleanos: "",
       rolId: "",
       password: "",
+      estado: item.estado || (item.activo ? "activo" : "inactivo"),
+      motivoEstado: item.motivoEstado || "",
     });
+    setSupportFile(null);
     setPhotoFile(null);
+    setSupportFile(null);
     setPhotoPreview(defaultPhoto);
     setEditingId(null);
     setError("");
@@ -558,13 +572,26 @@ export default function UsuariosPage() {
       return;
     }
 
+    if (form.estado !== "activo" && !form.motivoEstado.trim()) {
+      setError("Indica el motivo de suspensión o inactivación.");
+      return;
+    }
+
     setSaving(true);
 
     try {
+      const estadoData = { estado: form.estado, activo: form.estado === "activo", motivoEstado: form.estado === "activo" ? "" : form.motivoEstado.trim() };
+      const subirSoporte = async (userId: string) => {
+        if (!supportFile || form.estado === "activo") return {};
+        const storageRef = ref(storage, `usuarios/${userId}/soportes-estado/${Date.now()}-${supportFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
+        await uploadBytes(storageRef, supportFile);
+        return { soporteEstadoUrl: await getDownloadURL(storageRef), soporteEstadoNombre: supportFile.name };
+      };
       const roleName = selectedRole?.nombre || "Sin rol";
 
       if (editingId) {
         const photoData = await uploadPhotoIfNeeded(editingId);
+        const soporteData = await subirSoporte(editingId);
 
         await updateDoc(doc(db, "usuarios", editingId), {
           nombre: cleanName,
@@ -574,6 +601,9 @@ export default function UsuariosPage() {
           fechaCumpleanos: cleanFechaCumpleanos,
           rolId: form.rolId,
           rolNombre: roleName,
+          ...estadoData,
+          ...soporteData,
+          ...(form.estado === "activo" ? { soporteEstadoUrl: "", soporteEstadoNombre: "" } : {}),
           ...(photoData
             ? {
                 fotoUrl: photoData.fotoUrl,
@@ -608,7 +638,7 @@ export default function UsuariosPage() {
           rolNombre: roleName,
           fotoUrl: defaultPhoto,
           fotoPath: "",
-          activo: true,
+          ...estadoData,
           passwordTemporal: cleanPassword,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -617,6 +647,8 @@ export default function UsuariosPage() {
         });
 
         const photoData = await uploadPhotoIfNeeded(newUserRef.id);
+        const soporteData = await subirSoporte(newUserRef.id);
+        if (Object.keys(soporteData).length) await updateDoc(doc(db, "usuarios", newUserRef.id), soporteData);
 
         if (photoData) {
           await updateDoc(doc(db, "usuarios", newUserRef.id), {
@@ -697,6 +729,15 @@ export default function UsuariosPage() {
     } finally {
       setTogglingId(null);
     }
+  };
+
+  const handleDeleteUser = async (item: AppUser) => {
+    if (!can("usuarios", "eliminar")) return;
+    if (!window.confirm(`¿Eliminar el perfil de "${item.nombre}"? Esta acción quita su registro de Firestore, pero NO elimina su cuenta de Firebase Authentication.`)) return;
+    try {
+      await deleteDoc(doc(db, "usuarios", item.id));
+      setMessage("Perfil eliminado de la lista. La cuenta de Authentication requiere eliminación administrativa por separado.");
+    } catch (err: any) { setError(`No fue posible eliminar el perfil: ${err?.message || ""}`); }
   };
 
   const togglePasswordVisibility = (userId: string) => {
@@ -1293,6 +1334,16 @@ export default function UsuariosPage() {
                   />
                 </div>
 
+                <div className="min-w-0">
+                  <label className="mb-1 block text-xs font-bold text-slate-700">Estado del usuario</label>
+                  <select value={form.estado} disabled={!canModifyForm} onChange={(e) => setForm((current) => ({ ...current, estado: e.target.value as UserForm["estado"], motivoEstado: e.target.value === "activo" ? "" : current.motivoEstado }))} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
+                    <option value="activo">Activo</option><option value="suspendido">Suspendido</option><option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+                {form.estado !== "activo" && <div className="sm:col-span-2 xl:col-span-3 grid grid-cols-1 gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 sm:grid-cols-2">
+                  <div><label className="mb-1 block text-xs font-bold text-amber-900">Motivo (obligatorio)</label><textarea required value={form.motivoEstado} onChange={(e) => setForm((current) => ({ ...current, motivoEstado: e.target.value }))} rows={2} placeholder="Ej. Incapacidad médica" className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm" /></div>
+                  <div><label className="mb-1 block text-xs font-bold text-amber-900">Adjuntar soporte</label><input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={(e) => setSupportFile(e.target.files?.[0] || null)} className="w-full rounded-lg border border-amber-200 bg-white p-2 text-xs" />{supportFile && <p className="mt-1 text-xs text-amber-800">{supportFile.name}</p>}</div>
+                </div>}
                 <div className="sm:col-span-2 xl:col-span-3 rounded-lg border border-[#244C5A]/15 bg-[#244C5A]/5 p-4 text-sm text-[#244C5A]">
                   <strong>Nota:</strong> al crear usuario, el correo queda
                   registrado en Firebase Authentication con la contraseña
@@ -1502,20 +1553,13 @@ export default function UsuariosPage() {
                           </td>
 
                           <td className="px-5 py-4 text-center">
-                            <span
-                              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black ${
-                                item.activo
-                                  ? "bg-green-50 text-green-700"
-                                  : "bg-red-50 text-red-700"
-                              }`}
-                            >
-                              {item.activo ? (
-                                <CheckCircle2 size={15} />
-                              ) : (
-                                <XCircle size={15} />
-                              )}
-                              {item.activo ? "Activo" : "Inactivo"}
-                            </span>
+                            <div className="flex flex-col items-center gap-1">
+                              <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "bg-emerald-50 text-emerald-700" : (item.estado === "suspendido" ? "animate-pulse bg-amber-100 text-amber-800" : "animate-pulse bg-red-100 text-red-700")}`}>
+                                {(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "Activo" : item.estado === "suspendido" ? "Suspendido" : "Inactivo"}
+                              </span>
+                              {item.motivoEstado && <span title={item.motivoEstado} className="max-w-[140px] truncate text-[10px] text-slate-500">{item.motivoEstado}</span>}
+                              {item.soporteEstadoUrl && <a href={item.soporteEstadoUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-teal-700 underline">Ver soporte</a>}
+                            </div>
                           </td>
 
                           <td className="px-5 py-4">
@@ -1547,6 +1591,7 @@ export default function UsuariosPage() {
                                 <IdCard size={19} />
                               </button>
 
+                              {can("usuarios", "eliminar") && <button type="button" onClick={() => handleDeleteUser(item)} title="Eliminar perfil" className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50"><Trash2 size={17} /></button>}
                               {can("usuarios", "editar") && (
                                 <>
                                   <button
@@ -1560,12 +1605,10 @@ export default function UsuariosPage() {
 
                                   <button
                                     type="button"
-                                    onClick={() => handleToggleStatus(item)}
+                                    onClick={() => handleEdit(item)}
                                     disabled={togglingId === item.id}
                                     className="w-10 h-10 rounded-2xl border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-60 flex items-center justify-center transition"
-                                    title={
-                                      item.activo ? "Desactivar" : "Activar"
-                                    }
+                                    title="Cambiar estado desde Editar"
                                   >
                                     {togglingId === item.id ? (
                                       <Loader2
