@@ -338,6 +338,7 @@ export default function UsuariosPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState(defaultPhoto);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [userModalOpen, setUserModalOpen] = useState(false);
 
   const [selectedCarnet, setSelectedCarnet] = useState<AppUser | null>(null);
   const [search, setSearch] = useState("");
@@ -631,6 +632,7 @@ export default function UsuariosPage() {
       }
 
       resetForm();
+      setUserModalOpen(false);
     } catch (err: any) {
       if (err?.code === "auth/email-already-in-use") {
         setError("Ese correo ya existe en Firebase Authentication.");
@@ -651,6 +653,7 @@ export default function UsuariosPage() {
     }
 
     setEditingId(item.id);
+    setUserModalOpen(true);
     setForm({
       nombre: item.nombre || "",
       email: item.email || "",
@@ -664,7 +667,6 @@ export default function UsuariosPage() {
     setPhotoPreview(item.fotoUrl || defaultPhoto);
     setError("");
     setMessage("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleToggleStatus = async (item: AppUser) => {
@@ -1025,25 +1027,28 @@ export default function UsuariosPage() {
         </div>
 
         <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6">
+          {userModalOpen && (
+            <div className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-slate-950/60 p-2 backdrop-blur-[2px] sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) { setUserModalOpen(false); resetForm(); } }}>
+              <div role="dialog" aria-modal="true" aria-label={editingId ? "Editar usuario" : "Crear usuario"} className="mx-auto my-2 w-full max-w-5xl sm:my-4">
           <form
             onSubmit={handleSave}
-            className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden"
+            className="w-full rounded-xl border border-emerald-200 bg-white shadow-2xl"
           >
-            <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+            <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-t-xl border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
               <div>
                 <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
                   {editingId ? "Editando usuario" : "Nuevo usuario"}
                 </p>
-                <h2 className="text-2xl font-black mt-1">
+                <h2 className="text-lg font-black mt-0.5">
                   {editingId ? "Actualizar datos del usuario" : "Crear usuario"}
                 </h2>
-                <p className="text-slate-500 text-sm mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Crea el acceso en Authentication, guarda el perfil y asigna un
                   rol.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+              <div className="absolute right-3 top-3 flex gap-2">
                 {editingId && (
                   <button
                     type="button"
@@ -1296,7 +1301,7 @@ export default function UsuariosPage() {
               </div>
             </div>
 
-            <div className="px-5 sm:px-6 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+            <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-end">
               {editingId && (
                 <button
                   type="button"
@@ -1332,7 +1337,12 @@ export default function UsuariosPage() {
             </div>
           </form>
 
-          <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 mt-6 overflow-hidden">
+
+              </div>
+            </div>
+          )}
+
+          <section className="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
             <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
@@ -1344,7 +1354,8 @@ export default function UsuariosPage() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                {can("usuarios", "crear") && <button type="button" onClick={() => { resetForm(); setUserModalOpen(true); }} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#244C5A] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#1b3b46]"><Plus size={17} /> Crear usuario</button>}
                 <div className="relative w-full lg:w-[340px]">
                   <Search
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
