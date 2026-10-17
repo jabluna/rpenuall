@@ -1073,10 +1073,10 @@ export default function UsuariosPage() {
               </div>
             )}
 
-            <div className="p-5 sm:p-6 grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-6">
-              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 flex flex-col items-center justify-center">
+            <div className="p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-[160px_minmax(0,1fr)] gap-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-col items-center justify-center">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-[32px] bg-white border border-slate-200 overflow-hidden shadow-sm">
+                  <div className="w-24 h-24 rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm">
                     <Image
                       src={photoPreview || defaultPhoto}
                       alt="Foto usuario"
@@ -1107,14 +1107,14 @@ export default function UsuariosPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+              <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-3 gap-y-3">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Nombre
                   </label>
                   <div className="relative">
                     <UserRound
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       size={19}
                     />
                     <input
@@ -1128,18 +1128,18 @@ export default function UsuariosPage() {
                         }))
                       }
                       placeholder="Nombre completo"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
                     />
                   </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Email
                   </label>
                   <div className="relative">
                     <Mail
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       size={19}
                     />
                     <input
@@ -1153,18 +1153,18 @@ export default function UsuariosPage() {
                         }))
                       }
                       placeholder="correo@empresa.com"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Teléfono
                   </label>
                   <div className="relative">
                     <Phone
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       size={19}
                     />
                     <input
@@ -1178,18 +1178,18 @@ export default function UsuariosPage() {
                         }))
                       }
                       placeholder="Número de contacto"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
                     />
                   </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     RH
                   </label>
                   <div className="relative">
                     <Droplet
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       size={19}
                     />
                     <select
@@ -1201,7 +1201,7 @@ export default function UsuariosPage() {
                           rh: e.target.value,
                         }))
                       }
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
                     >
                       <option value="">Selecciona RH</option>
                       <option value="O+">O+</option>
@@ -1216,13 +1216,13 @@ export default function UsuariosPage() {
                   </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Fecha de cumpleaños
                   </label>
                   <div className="relative">
                     <CalendarDays
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       size={19}
                     />
                     <input
@@ -1235,13 +1235,13 @@ export default function UsuariosPage() {
                           fechaCumpleanos: e.target.value,
                         }))
                       }
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
                     />
                   </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Rol
                   </label>
                   <select
@@ -1253,7 +1253,7 @@ export default function UsuariosPage() {
                         rolId: e.target.value,
                       }))
                     }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20"
                   >
                     <option value="">
                       {loadingRoles ? "Cargando roles..." : "Selecciona un rol"}
@@ -1267,8 +1267,8 @@ export default function UsuariosPage() {
                   </select>
                 </div>
 
-                <div className="lg:col-span-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Contraseña temporal
                   </label>
                   <input
@@ -1284,11 +1284,11 @@ export default function UsuariosPage() {
                     placeholder={
                       editingId ? "No editable aquí" : "Mínimo 6 caracteres"
                     }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20 disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
 
-                <div className="md:col-span-2 xl:col-span-7 rounded-3xl border border-[#244C5A]/15 bg-[#244C5A]/5 p-4 text-sm text-[#244C5A]">
+                <div className="sm:col-span-2 xl:col-span-3 rounded-lg border border-[#244C5A]/15 bg-[#244C5A]/5 p-4 text-sm text-[#244C5A]">
                   <strong>Nota:</strong> al crear usuario, el correo queda
                   registrado en Firebase Authentication con la contraseña
                   temporal indicada.
