@@ -2429,7 +2429,7 @@ export default function ProveedoresBodegaPage() {
       />
 
       <main className={`${sidebarWidth} min-h-screen bg-slate-100 text-slate-900 pt-16 lg:pt-0 transition-all duration-300`}>
-        <header className="hidden lg:flex h-20 bg-white border-b border-slate-200 px-8 items-center justify-between sticky top-0 z-30">
+        <header className="hidden lg:flex h-16 bg-white border-b border-slate-200 px-6 items-center justify-between sticky top-0 z-30">
           <div>
             <nav aria-label="Ruta de navegación" className="flex items-center gap-2 text-sm text-slate-500">
               <Link
@@ -2473,11 +2473,12 @@ export default function ProveedoresBodegaPage() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-bold text-slate-800 truncate max-w-[240px]">{userName}</p>
-              <p className="text-xs text-slate-500 truncate max-w-[240px]">{authUser?.email}</p>
+            <div className="min-w-0 text-right">
+              <p className="truncate text-sm font-bold leading-tight text-slate-800 max-w-[270px]">{userName}</p>
+              <p className="mt-0.5 truncate text-[11px] font-semibold leading-tight text-teal-700 max-w-[270px]">{(profile as any)?.rolNombre || "Sin rol"}</p>
+              <p className="mt-0.5 truncate text-[11px] leading-tight text-slate-500 max-w-[270px]">{authUser?.email}</p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center font-black uppercase">
+            <div className="w-9 h-9 rounded-xl bg-[#244C5A] text-white flex items-center justify-center text-sm font-black uppercase">
               {userName.slice(0, 1)}
             </div>
           </div>
@@ -3908,15 +3909,15 @@ function AppSidebar({
   return (
     <aside
       className={`fixed z-50 inset-y-0 left-0 ${
-        sidebarCollapsed ? "lg:w-[88px]" : "lg:w-[300px]"
-      } w-[300px] bg-[#244C5A] text-white transform transition-all duration-300 lg:translate-x-0 ${
+        sidebarCollapsed ? "lg:w-[72px]" : "lg:w-[260px]"
+      } w-[260px] bg-[#244C5A] text-white transform transition-all duration-300 lg:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
       <div className="h-full flex flex-col">
-        <div className={`px-4 pt-6 pb-5 border-b border-white/10 flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
-          <div className="flex items-center justify-center min-h-[56px]">
-            <Image src="/logo.png" alt="Nuall" width={sidebarCollapsed ? 48 : 145} height={70} priority className="object-contain" />
+        <div className={`px-3 pt-3 pb-3 border-b border-white/10 flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
+          <div className="flex items-center justify-center min-h-[42px]">
+            <Image src="/logo.png" alt="Nuall" width={sidebarCollapsed ? 38 : 115} height={50} priority className="object-contain" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -3939,21 +3940,10 @@ function AppSidebar({
           </div>
         </div>
 
-        {!sidebarCollapsed && (
-          <div className="px-6 py-5">
-            <div className="rounded-3xl bg-white border border-white p-4 text-[#244C5A] shadow-sm">
-              <p className="text-xs uppercase tracking-wider font-black text-[#244C5A]/70">Sesión activa</p>
-              <p className="font-black mt-1 truncate">{userName}</p>
-              <p className="text-xs text-[#244C5A]/70 truncate mt-1">{email}</p>
-              <p className="text-xs text-[#244C5A]/70 truncate mt-1">Rol: {roleName}</p>
-            </div>
-          </div>
-        )}
-
-        <nav className="px-4 flex-1 space-y-2 overflow-y-auto pb-4">
+        <nav className="px-3 pt-3 flex-1 space-y-1 overflow-y-auto pb-3">
           <Link
             href="/panel"
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-[#244C5A] font-bold shadow-lg ${sidebarCollapsed ? "justify-center" : ""}`}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white text-[#244C5A] font-bold shadow-lg ${sidebarCollapsed ? "justify-center" : ""}`}
             onClick={() => setSidebarOpen(false)}
             title="Panel Principal"
           >
