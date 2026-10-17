@@ -827,7 +827,8 @@ export default function GestionComprasBodegaPage() {
     let rechazados = 0;
 
     procesosGenerales.forEach((proceso) => {
-      const estado = obtenerEstado(compra.id, "__orden__", proceso.key).estado;
+      const registro = obtenerEstado(compra.id, "__orden__", proceso.key);
+      const estado = registro.meta ? registro.estado : "sin_verificar";
       if (estado === "aceptado" || estado === "solicitado") aceptados += 1;
       if (estado === "rechazado" || estado === "diferente") rechazados += 1;
     });
@@ -835,13 +836,16 @@ export default function GestionComprasBodegaPage() {
     items.forEach((item, index) => {
       const key = itemKey(item, index);
       procesosProducto.forEach((proceso) => {
-        const estado = obtenerEstado(compra.id, key, proceso.key).estado;
+        const registro = obtenerEstado(compra.id, key, proceso.key);
+        const estado = registro.meta ? registro.estado : "sin_verificar";
         if (estado === "aceptado" || estado === "solicitado") aceptados += 1;
         if (estado === "rechazado" || estado === "diferente") rechazados += 1;
       });
     });
 
-    return { total, aceptados, rechazados };
+    const recepciones = items.map((item, index) => obtenerEstado(compra.id, itemKey(item, index), "recepcion_mercancia"));
+    const exitosa = recepciones.length > 0 && recepciones.every(registro => registro.estado === "aceptado" && !!registro.meta);
+    return { total, aceptados, rechazados, exitosa };
   };
 
   const abrirModalRecepcion = async (
@@ -1641,6 +1645,7 @@ export default function GestionComprasBodegaPage() {
                                     {resumen.rechazados}
                                   </span>{" "}
                                   rechazados
+                                  {resumen.exitosa && <span className="ml-2 inline-flex animate-pulse rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase text-emerald-800">✓ Exitosa</span>}
                                 </div>
                                 <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
                                   <div
@@ -1894,6 +1899,7 @@ export default function GestionComprasBodegaPage() {
                             {resumen.rechazados}
                           </span>{" "}
                           rechazados
+                          {resumen.exitosa && <span className="ml-2 inline-flex animate-pulse rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase text-emerald-800">✓ Exitosa</span>}
                         </div>
 
                         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2029,30 +2035,30 @@ export default function GestionComprasBodegaPage() {
 
 
         {recepcionModal && (
-          <div className="fixed inset-0 z-[1002] bg-black/60 flex items-center justify-center px-4 py-6">
-            <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-6xl overflow-hidden max-h-[92vh] flex flex-col">
-              <div className="p-5 border-b border-slate-200 flex items-start justify-between gap-4">
+          <div className="fixed inset-0 z-[1002] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center px-3 sm:px-5 py-5">
+            <div className="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden max-h-[94vh] flex flex-col border border-white/20">
+              <div className="p-5 sm:p-6 border-b border-emerald-800 bg-gradient-to-r from-[#244C5A] to-emerald-800 text-white flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">
+                  <p className="text-xs font-black text-emerald-200 uppercase tracking-widest">
                     Recepción de mercancía
                   </p>
-                  <h3 className="text-xl font-black text-slate-900 mt-1">
+                  <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
                     {recepcionModal.productCode} · {recepcionModal.productName}
                   </h3>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-white/80 mt-1">
                     Orden {recepcionModal.compra.consecutivo || recepcionModal.compra.id} · Proveedor {recepcionModal.providerName}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setRecepcionModal(null)}
-                  className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="p-5 overflow-auto space-y-5">
+              <div className="p-4 sm:p-6 overflow-auto space-y-4">
                 {(() => {
                   const stockActual = getLatestStockFromMovements(recepcionModal.movimientosRaw, recepcionModal.item.stock);
                   const ingreso = toNumber(recepcionModal.ingreso);
@@ -2061,7 +2067,7 @@ export default function GestionComprasBodegaPage() {
                   const nuevoDisponible = nuevoStock - stockActual.stockReservado;
 
                   return (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4">
                         <p className="text-xs font-black uppercase text-blue-700">Cantidad ordenada</p>
                         <p className="text-2xl font-black text-blue-700 mt-1">{formatNumber(cantidadOrdenada)}</p>
@@ -2082,13 +2088,13 @@ export default function GestionComprasBodegaPage() {
                   );
                 })()}
 
-                <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5">
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,0.85fr)_minmax(0,1.6fr)] gap-4">
                   <form
                     onSubmit={(event) => {
                       event.preventDefault();
                       guardarRecepcionMercancia();
                     }}
-                    className="rounded-3xl border border-slate-200 bg-white p-4 space-y-4"
+                    className="rounded-2xl border border-emerald-200 bg-white p-4 sm:p-5 space-y-4 shadow-sm"
                   >
                     <div>
                       <p className="font-black text-slate-900">Crear entrada en bodega</p>
@@ -2199,13 +2205,13 @@ export default function GestionComprasBodegaPage() {
                     </div>
                   </form>
 
-                  <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
+                  <div className="min-w-0 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
                       <p className="font-black text-slate-900">Movimientos actuales del producto</p>
                       <p className="text-xs text-slate-500 mt-1">Referencia tomada del nivel 3 de bodega.</p>
                     </div>
                     <div className="overflow-x-auto max-h-[430px]">
-                      <table className="w-full min-w-[780px] text-sm">
+                      <table className="w-full min-w-[640px] text-xs">
                         <thead className="sticky top-0 bg-white border-b border-slate-200">
                           <tr>
                             <th className="text-left px-3 py-3 text-[11px] font-black uppercase text-slate-500">Fecha</th>
