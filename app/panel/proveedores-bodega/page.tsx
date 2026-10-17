@@ -3943,7 +3943,7 @@ function AppSidebar({
         <nav className="px-3 pt-3 flex-1 space-y-1 overflow-y-auto pb-3">
           <Link
             href="/panel"
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-transparent text-white/80 font-semibold hover:bg-white/[0.07] hover:text-white transition-colors ${sidebarCollapsed ? "justify-center" : ""}`}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-transparent text-[13px] text-white/80 font-semibold hover:bg-white/[0.07] hover:text-white transition-colors ${sidebarCollapsed ? "justify-center" : ""}`}
             onClick={() => setSidebarOpen(false)}
             title="Panel Principal"
           >
@@ -3961,7 +3961,7 @@ function AppSidebar({
                 <button
                   type="button"
                   onClick={() => toggleSection(section.title)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-white/85 hover:bg-white/[0.07] hover:text-white transition-colors ${sidebarCollapsed ? "justify-center" : ""}`}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-[13px] text-white/85 hover:bg-white/[0.07] hover:text-white transition-colors ${sidebarCollapsed ? "justify-center" : ""}`}
                   title={section.title}
                 >
                   <span className={`flex items-center gap-3 font-bold ${sidebarCollapsed ? "justify-center" : ""}`}>
@@ -3981,7 +3981,7 @@ function AppSidebar({
                           key={item.title}
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-2 text-sm transition-colors ${
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-2 text-[12px] transition-colors ${
                             active
                               ? "border-emerald-300 bg-white/[0.11] text-white font-semibold"
                               : "border-transparent text-white/65 hover:bg-white/[0.06] hover:text-white"
