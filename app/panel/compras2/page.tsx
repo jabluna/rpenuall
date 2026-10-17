@@ -2081,7 +2081,7 @@ export default function CrearComprasAlertasPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="relative">
                         <Search
                           className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -2096,11 +2096,12 @@ export default function CrearComprasAlertasPage() {
                         />
                       </div>
 
-                      <div>
+                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(210px,0.8fr)_minmax(0,1.5fr)]">
+                      <div className="min-w-0">
                         <label className="block text-xs font-black uppercase tracking-wide text-slate-500 mb-2">
                           Seleccionar proveedor
                         </label>
-                        <div className="rounded-3xl border border-slate-200 overflow-hidden max-h-[230px] overflow-y-auto bg-white">
+                        <div className="rounded-3xl border border-slate-200 overflow-hidden max-h-[360px] overflow-y-auto bg-white">
                           {manualProviderOptionsFiltrados.length === 0 ? (
                             <div className="p-4 text-sm text-slate-500">
                               No hay proveedores disponibles con ese filtro.
@@ -2122,8 +2123,9 @@ export default function CrearComprasAlertasPage() {
                                       provider.codigoProveedor,
                                     );
                                     setSelectedGeneralId("");
+                                    setDetalleProductoOpen(false);
                                   }}
-                                  className={`w-full text-left px-4 py-3 border-b border-white transition ${getProviderGroupClass(providerKey)} ${active ? "ring-2 ring-inset ring-[#244C5A]" : ""}`}
+                                  className={`w-full text-left px-3 py-2.5 border-b border-white transition ${getProviderGroupClass(providerKey)} ${active ? "ring-2 ring-inset ring-[#244C5A]" : ""}`}
                                 >
                                   <p className="text-sm font-black text-slate-900 truncate">
                                     {provider.codigoProveedor} ·{" "}
@@ -2140,11 +2142,11 @@ export default function CrearComprasAlertasPage() {
                         </div>
                       </div>
 
-                      <div>
+                      <div className="min-w-0">
                         <label className="block text-xs font-black uppercase tracking-wide text-slate-500 mb-2">
                           Seleccionar producto
                         </label>
-                        <div className="rounded-3xl border border-slate-200 overflow-hidden max-h-[260px] overflow-y-auto bg-white">
+                        <div className="rounded-3xl border border-slate-200 overflow-hidden max-h-[360px] overflow-y-auto bg-white">
                           {!selectedManualProviderCode ? (
                             <div className="p-4 text-sm text-slate-500">
                               Primero selecciona un proveedor.
@@ -2187,7 +2189,7 @@ export default function CrearComprasAlertasPage() {
                                                 setSelectedMockup(producto.mockupUrl);
                                               }
                                             }}
-                                            className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-sm flex items-center justify-center cursor-zoom-in"
+                                            className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-sm flex items-center justify-center cursor-zoom-in"
                                             title="Ampliar mockup"
                                           >
                                             <img
@@ -2235,6 +2237,7 @@ export default function CrearComprasAlertasPage() {
                           )}
                         </div>
                       </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2242,7 +2245,8 @@ export default function CrearComprasAlertasPage() {
               </div>
               </div>}
               {detalleProductoOpen && <div className="space-y-3">
-                <button type="button" onClick={() => setDetalleProductoOpen(false)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-[#244C5A]"><ArrowLeft size={15}/> Volver a la lista de productos</button>
+                <button type="button" onClick={() => setDetalleProductoOpen(false)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-[#244C5A]"><ArrowLeft size={15}/> {modalMode === "manual" ? "Volver a proveedores y productos" : "Volver a la lista de productos"}</button>
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"><p className="text-[11px] font-bold uppercase text-emerald-700">Producto seleccionado · {bodegasCompra.find(b => b.id === bodegaCompraId)?.nombre}</p><p className="mt-1 text-sm font-black text-slate-900">{modalMode === "manual" ? selectedGeneralProduct?.producto : selectedAlert?.producto}</p></div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {selectedModalMockupUrl && (
                   <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
