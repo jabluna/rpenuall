@@ -1481,7 +1481,7 @@ export default function OrdenesCreadasPage() {
               </div>
 
               <div className="p-3 sm:p-6 overflow-auto">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="flex flex-col gap-4">
                   {(pedidoProductosModal.items || []).map((item, itemIndex) => (
                     <div
                       key={`${item.codigo}-${itemIndex}-mobile`}
@@ -1495,7 +1495,7 @@ export default function OrdenesCreadasPage() {
                           {item.producto}
                         </p>
 
-                        <div className="grid grid-cols-2 gap-2 mt-3">
+                        <div className="grid grid-cols-1 gap-3 mt-3 sm:grid-cols-2 lg:grid-cols-4">
                           <div>
                             <p className="text-[11px] uppercase font-black text-slate-400">
                               Cantidad
@@ -1595,7 +1595,7 @@ export default function OrdenesCreadasPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 xl:grid-cols-4">
+                      <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
                         {procesos.map((proceso) => {
                           const estado =
                             item.procesos?.[proceso.key] || "sin_verificar";
@@ -1604,7 +1604,7 @@ export default function OrdenesCreadasPage() {
                           return (
                             <div
                               key={`${item.codigo}-${proceso.key}-mobile`}
-                              className="min-w-0 rounded-lg border border-slate-200 p-3"
+                              className="min-w-0 rounded-lg border border-slate-200 bg-white p-3"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
