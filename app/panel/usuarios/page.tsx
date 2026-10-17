@@ -480,12 +480,11 @@ export default function UsuariosPage() {
       fechaCumpleanos: "",
       rolId: "",
       password: "",
-      estado: item.estado || (item.activo ? "activo" : "inactivo"),
-      motivoEstado: item.motivoEstado || "",
+      estado: "activo",
+      motivoEstado: "",
     });
     setSupportFile(null);
     setPhotoFile(null);
-    setSupportFile(null);
     setPhotoPreview(defaultPhoto);
     setEditingId(null);
     setError("");
@@ -695,7 +694,10 @@ export default function UsuariosPage() {
       fechaCumpleanos: item.fechaCumpleanos || "",
       rolId: item.rolId || "",
       password: "",
+      estado: item.estado || (item.activo ? "activo" : "inactivo"),
+      motivoEstado: item.motivoEstado || "",
     });
+    setSupportFile(null);
     setPhotoFile(null);
     setPhotoPreview(item.fotoUrl || defaultPhoto);
     setError("");
