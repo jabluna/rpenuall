@@ -1446,26 +1446,27 @@ export default function UsuariosPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1260px] border-collapse">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full table-fixed border-collapse text-xs">
+                  <colgroup><col style={{ width: "18%" }} /><col style={{ width: "18%" }} /><col style={{ width: "12%" }} /><col style={{ width: "13%" }} /><col style={{ width: "12%" }} /><col style={{ width: "27%" }} /></colgroup>
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Usuario
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Contacto
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Rol
                       </th>
-                      <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-left px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Contraseña
                       </th>
-                      <th className="text-center px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-center px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Estado
                       </th>
-                      <th className="text-right px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                      <th className="text-right px-2 py-2 text-xs font-black uppercase tracking-wide text-slate-500">
                         Acciones
                       </th>
                     </tr>
@@ -1481,9 +1482,9 @@ export default function UsuariosPage() {
                           key={item.id}
                           className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
                         >
-                          <td className="px-5 py-4">
+                          <td className="px-2 py-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                              <div className="w-9 h-9 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                                 <Image
                                   src={item.fotoUrl || defaultPhoto}
                                   alt={item.nombre}
@@ -1508,7 +1509,7 @@ export default function UsuariosPage() {
                             </div>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 py-2">
                             <p className="text-sm font-bold text-slate-800">
                               {item.email}
                             </p>
@@ -1521,13 +1522,13 @@ export default function UsuariosPage() {
                             </p>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 py-2">
                             <span className="inline-flex items-center rounded-full bg-[#244C5A]/10 text-[#244C5A] px-3 py-1 text-xs font-black">
                               {item.rolNombre || "Sin rol"}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-2 py-2">
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-sm text-slate-700 min-w-[120px]">
                                 {storedPassword
@@ -1555,7 +1556,7 @@ export default function UsuariosPage() {
                             </div>
                           </td>
 
-                          <td className="px-5 py-4 text-center">
+                          <td className="px-2 py-2 text-center">
                             <div className="flex flex-col items-center gap-1">
                               <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "bg-emerald-50 text-emerald-700" : (item.estado === "suspendido" ? "animate-pulse ring-2 ring-amber-300 bg-amber-200 text-amber-950" : "animate-pulse ring-2 ring-red-300 bg-red-200 text-red-900")}`}>
                                 {(item.estado || (item.activo ? "activo" : "inactivo")) === "activo" ? "Activo" : item.estado === "suspendido" ? "Suspendido" : "Inactivo"}
@@ -1566,12 +1567,12 @@ export default function UsuariosPage() {
                           </td>
 
                           <td className="whitespace-nowrap px-3 py-3">
-                            <div className="flex w-max flex-nowrap items-center justify-end gap-1.5">
+                            <div className="flex w-full flex-nowrap items-center justify-end gap-1">
                               <button
                                 type="button"
                                 onClick={() => handleSendCredentialsEmail(item)}
                                 disabled={emailingId === item.id || !item.passwordTemporal}
-                                className="h-9 w-9 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition"
+                                className="h-8 w-8 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition"
                                 title={
                                   item.passwordTemporal
                                     ? "Enviar credenciales por email"
@@ -1588,14 +1589,14 @@ export default function UsuariosPage() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedCarnet(item)}
-                                className="h-9 w-9 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white flex items-center justify-center transition"
+                                className="h-8 w-8 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white flex items-center justify-center transition"
                                 title="Ver carnet"
                               >
                                 <IdCard size={19} />
                               </button>
 
-                              <button type="button" onClick={() => handleEdit(item)} disabled={!can("usuarios", "editar")} title="Editar usuario" className="inline-flex h-9 shrink-0 items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 disabled:opacity-40"><Edit3 size={15} /> Editar</button>
-                              <button type="button" onClick={() => handleDeleteUser(item)} disabled={!can("usuarios", "eliminar")} title="Eliminar perfil" className="inline-flex h-9 shrink-0 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-40"><Trash2 size={15} /> Eliminar</button>
+                              <button type="button" onClick={() => handleEdit(item)} disabled={!can("usuarios", "editar")} title="Editar usuario" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-1.5 py-1 text-[11px] font-bold text-teal-800 hover:bg-teal-100 disabled:opacity-40"><Edit3 size={15} /> Editar</button>
+                              <button type="button" onClick={() => handleDeleteUser(item)} disabled={!can("usuarios", "eliminar")} title="Eliminar perfil" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-1.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-100 disabled:opacity-40"><Trash2 size={15} /> Eliminar</button>
                             </div>
                           </td>
                         </tr>
