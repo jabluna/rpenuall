@@ -2869,84 +2869,40 @@ export default function ProveedoresBodegaPage() {
 
         {selectedProduct && selectedProvider ? (
           <>
-            <section className="relative overflow-hidden rounded-[32px] bg-[#244C5A] text-white p-6 sm:p-8 shadow-xl mb-6">
-              <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10" />
-              <div className="absolute right-24 bottom-[-80px] w-56 h-56 rounded-full bg-white/10" />
-
-              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleBackToProducts}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 px-4 py-2 text-sm font-bold transition mb-5"
-                  >
-                    <ArrowLeft size={17} />
-                    Volver a productos
-                  </button>
-
-                  <p className="text-sm text-white/65 uppercase tracking-wide font-bold">
-                    {selectedProvider.nombre}
-                  </p>
-                  <h2 className="text-3xl sm:text-4xl font-black mt-1">
-                    {selectedProduct.producto || selectedProduct.codigo}
-                  </h2>
-                  <p className="text-white/70 mt-2">
-                    Código: {selectedProduct.codigo}
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <section className="mb-5 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onClick={handleBackToProducts} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-[#244C5A] hover:bg-slate-50">
+                  <ArrowLeft size={16} /> Volver a productos
+                </button>
+                <span className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800">Bodega {bodegaSeleccionada}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
+                <div className="col-span-2 flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:col-span-1">
                   {selectedProduct.mockupUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMockup(selectedProduct.mockupUrl)}
-                      className="w-28 h-28 rounded-[28px] overflow-hidden border border-white/20 bg-white/10 shadow-lg hover:scale-105 transition shrink-0"
-                      title="Ampliar mockup"
-                    >
-                      <Image
-                        src={selectedProduct.mockupUrl}
-                        alt={`Mockup ${selectedProduct.producto}`}
-                        width={160}
-                        height={160}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
+                    <button type="button" onClick={() => setSelectedMockup(selectedProduct.mockupUrl)} title="Ampliar imagen" className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                      <Image src={selectedProduct.mockupUrl} alt={selectedProduct.producto} width={80} height={80} className="h-full w-full object-cover" unoptimized />
                     </button>
                   ) : (
-                    <div className="w-28 h-28 rounded-[28px] border border-white/15 bg-white/10 text-white/60 flex items-center justify-center shrink-0">
-                      <ImageIcon size={32} />
-                    </div>
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400"><ImageIcon size={26} /></div>
                   )}
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Stock real
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeNumber(currentBalance)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Movimientos
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {movementRows.length}
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl bg-white/10 border border-white/10 px-5 py-4 col-span-2 sm:col-span-1">
-                    <p className="text-xs text-white/50 uppercase tracking-wide">
-                      Stock proyectado
-                    </p>
-                    <p className="text-2xl font-black mt-1">
-                      {normalizeNumber(calculatedBalance)}
-                    </p>
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-semibold text-slate-500">{selectedProvider.nombre}</p>
+                    <h2 className="line-clamp-2 text-sm font-black leading-tight text-slate-900">{selectedProduct.producto || selectedProduct.codigo}</h2>
+                    <p className="mt-1 truncate text-[11px] text-slate-500">{selectedProduct.codigo}</p>
                   </div>
                 </div>
-                </div>
+                {[
+                  { label: "Stock real", value: normalizeNumber(currentBalance), tone: "text-[#244C5A]" },
+                  { label: "Reservado", value: normalizeNumber(bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? toNumber(movementForm.STOCK_RESERVADO) : Number(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.reservado || 0)), tone: "text-amber-700" },
+                  { label: "Disponible", value: normalizeNumber(Math.max(0, currentBalance - (bodegaSeleccionada === BODEGA_PRINCIPAL_ID ? toNumber(movementForm.STOCK_RESERVADO) : Number(inventarioBodega[claveInsumo({proveedorId:selectedProvider.codigoNodo,productoId:selectedProduct.id})]?.reservado || 0)))), tone: "text-emerald-700" },
+                  { label: "Stock proyectado", value: normalizeNumber(calculatedBalance), tone: "text-indigo-700" },
+                  { label: "Movimientos", value: String(movementRows.length), tone: "text-[#244C5A]" },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex min-h-[92px] flex-col justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p className="text-xs font-semibold text-slate-500">{stat.label}</p>
+                    <p className={`mt-1 text-2xl font-black tabular-nums ${stat.tone}`}>{stat.value}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
