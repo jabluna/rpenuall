@@ -1447,7 +1447,7 @@ export default function UsuariosPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1160px] border-collapse">
+                <table className="w-full min-w-[1260px] border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
@@ -1565,13 +1565,13 @@ export default function UsuariosPage() {
                             </div>
                           </td>
 
-                          <td className="px-5 py-4">
-                            <div className="flex flex-wrap items-center justify-end gap-2">
+                          <td className="whitespace-nowrap px-3 py-3">
+                            <div className="flex w-max flex-nowrap items-center justify-end gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => handleSendCredentialsEmail(item)}
                                 disabled={emailingId === item.id || !item.passwordTemporal}
-                                className="w-10 h-10 rounded-2xl border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition"
+                                className="h-9 w-9 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition"
                                 title={
                                   item.passwordTemporal
                                     ? "Enviar credenciales por email"
@@ -1588,14 +1588,14 @@ export default function UsuariosPage() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedCarnet(item)}
-                                className="w-10 h-10 rounded-2xl border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white flex items-center justify-center transition"
+                                className="h-9 w-9 shrink-0 rounded-lg border border-[#244C5A] text-[#244C5A] hover:bg-[#244C5A] hover:text-white flex items-center justify-center transition"
                                 title="Ver carnet"
                               >
                                 <IdCard size={19} />
                               </button>
 
-                              <button type="button" onClick={() => handleEdit(item)} disabled={!can("usuarios", "editar")} title="Editar usuario" className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-2 text-xs font-bold text-teal-800 hover:bg-teal-100 disabled:opacity-40"><Edit3 size={15} /> Editar</button>
-                              <button type="button" onClick={() => handleDeleteUser(item)} disabled={!can("usuarios", "eliminar")} title="Eliminar perfil" className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-40"><Trash2 size={15} /> Eliminar</button>
+                              <button type="button" onClick={() => handleEdit(item)} disabled={!can("usuarios", "editar")} title="Editar usuario" className="inline-flex h-9 shrink-0 items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 disabled:opacity-40"><Edit3 size={15} /> Editar</button>
+                              <button type="button" onClick={() => handleDeleteUser(item)} disabled={!can("usuarios", "eliminar")} title="Eliminar perfil" className="inline-flex h-9 shrink-0 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-40"><Trash2 size={15} /> Eliminar</button>
                             </div>
                           </td>
                         </tr>
