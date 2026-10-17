@@ -667,7 +667,7 @@ export default function PanelPage() {
       </aside>
 
       <section className={`${sidebarWidth} pt-16 lg:pt-0 transition-all duration-300`}>
-        <header className="hidden lg:flex h-20 bg-white border-b border-slate-200 px-8 items-center justify-between sticky top-0 z-30">
+        <header className="hidden lg:flex h-16 bg-white border-b border-slate-200 px-6 items-center justify-between sticky top-0 z-30">
           <div>
             <nav aria-label="Ruta de navegación" className="flex items-center gap-2 text-sm text-slate-500">
               <Link href="/panel" className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-[#244C5A] text-white hover:bg-[#1d3d49] transition" title="Ir al dashboard">
@@ -681,11 +681,12 @@ export default function PanelPage() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-bold text-slate-800">{userName}</p>
-              <p className="text-xs text-slate-500">{authUser?.email}</p>
+            <div className="min-w-0 text-right">
+              <p className="text-sm font-bold leading-tight text-slate-800">{userName}</p>
+              <p className="mt-0.5 text-[11px] font-semibold leading-tight text-teal-700">{profile?.rolNombre || "Sin rol"}</p>
+              <p className="mt-0.5 text-[11px] leading-tight text-slate-500">{authUser?.email}</p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center font-black uppercase">{userName.slice(0, 1)}</div>
+            <div className="w-9 h-9 rounded-xl bg-[#244C5A] text-white flex items-center justify-center text-sm font-black uppercase">{userName.slice(0, 1)}</div>
           </div>
         </header>
 
