@@ -1,673 +1,157 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Boxes,
-  CheckCircle2,
-  ChevronDown,
-  ClipboardList,
-  Clock3,
-  Eye,
-  FileText,
-  Home,
-  Loader2,
-  LogOut,
-  Menu,
-  PackageCheck,
-  PackageSearch,
-  PanelLeftClose,
-  PanelLeftOpen,
-  PlusCircle,
-  Search,
-  ShieldCheck,
-  ShoppingCart,
-  Tag,
-  Tags,
-  Timeline,
-  Truck,
-  UserCog,
-  Users,
-  X,
-  XCircle,
-} from "lucide-react";
-import { signOut } from "firebase/auth";
+import { ArrowLeft, Boxes, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Factory, FileText, Filter, Loader2, PackageCheck, RefreshCw, Search, ShoppingCart, Tags, Timeline, Truck, X } from "lucide-react";
 import { get, ref } from "firebase/database";
-import { auth, dbRealtime } from "@/lib/firebase";
+import { dbRealtime } from "@/lib/firebase";
 import { useUserPermissions } from "@/lib/useUserPermissions";
+import NoPermission from "@/components/NoPermission";
 
-type EstadoProceso = "sin_verificar" | "aceptado" | "rechazado";
-
-type EstadoMeta = {
-  estado: EstadoProceso;
-  usuario?: string;
-  uid?: string | null;
-  email?: string | null;
-  fecha?: string;
-  rol?: string;
-  motivo?: string;
+type Fuente = "pedido" | "compra" | "compra_etiquetas" | "programacion" | "traslado";
+type Evento = { id:string; fuente:Fuente; referencia:string; titulo:string; detalle:string; fecha:string; estado:string; responsable:string; url:string; items:number; cantidad:number; relaciones:string[]; pasos:Paso[] };
+type Paso = { titulo:string; fecha:string; estado:string; descripcion:string; usuario?:string };
+const fuentes: Record<Fuente,{nombre:string;url:string;clase:string}> = {
+  pedido:{nombre:"Pedidos / producción",url:"/panel/ordenes_creadas",clase:"bg-indigo-50 text-indigo-700 border-indigo-200"},
+  compra:{nombre:"Compras de insumos",url:"/panel/gestion-compras2",clase:"bg-sky-50 text-sky-700 border-sky-200"},
+  compra_etiquetas:{nombre:"Compras de etiquetas",url:"/panel/gestion-etiquetas",clase:"bg-amber-50 text-amber-800 border-amber-200"},
+  programacion:{nombre:"Programación de planta",url:"/panel/produccionxplanta",clase:"bg-violet-50 text-violet-700 border-violet-200"},
+  traslado:{nombre:"Traslados entre bodegas",url:"/panel/proveedores-bodega",clase:"bg-emerald-50 text-emerald-700 border-emerald-200"},
 };
-
-type PedidoItem = {
-  codigo?: string;
-  producto?: string;
-  cantidad?: string | number;
-  consecutivo?: string | number;
-  planta?: string;
-  procesos?: Record<string, EstadoProceso>;
-  estadosMeta?: Record<string, EstadoMeta>;
-  historialEstados?: Record<string, EstadoMeta[]>;
-};
-
-type PedidoGuardado = {
-  id: string;
-  ordenPedido?: string;
-  ordenBase?: string | number;
-  fecha?: string;
-  cliente?: { codigo_cliente?: string; nombre?: string };
-  items?: PedidoItem[];
-  estadoGeneral?: string;
-  creadoPor?: string;
-  creadoPorEmail?: string | null;
-  creadoAt?: string;
-  actualizadoPor?: string;
-  actualizadoPorEmail?: string | null;
-  actualizadoAt?: string;
-  responsableProduccion?: string;
-  responsableProduccionRol?: string;
-};
-
-type ReservaInsumo = {
-  key: string;
-  path: string;
-  proveedor?: string;
-  proveedorCodigo?: string;
-  productoProveedor?: string;
-  codigoInsumo?: string;
-  descripcionInsumo?: string;
-  tipoEmpaque?: string;
-  cantidad?: number;
-  movimientoKey?: string;
-  stockReservadoAnterior?: number;
-  stockReservadoNuevo?: number;
-  stockDisponible?: number;
-  stockTeorico?: number;
-  estado?: string;
-  createdAt?: string;
-  productoPedidoCodigo?: string;
-  productoPedido?: string;
-  ordenPedido?: string;
-  ordenPedidoId?: string;
-};
-
-type SidebarItem = { title: string; icon: any; href: string; module?: string };
-type SidebarSection = { title: string; icon: any; items: SidebarItem[] };
-
-const sidebarSections: SidebarSection[] = [
-  {
-    title: "Usuarios",
-    icon: Users,
-    items: [
-      { title: "Crear / ver roles", icon: ShieldCheck, href: "/panel/roles", module: "roles" },
-      { title: "Crear / ver usuarios", icon: UserCog, href: "/panel/usuarios", module: "usuarios" },
-    ],
-  },
-  {
-    title: "Bodega",
-    icon: Boxes,
-    items: [
-      { title: "Listado / Movimiento de Proveedores", icon: Truck, href: "/panel/proveedores-bodega", module: "proveedoresBodega" },
-    ],
-  },
-  {
-    title: "Pedidos y Producción",
-    icon: ClipboardList,
-    items: [
-      { title: "Crear / ver clientes", icon: Users, href: "/panel/clientes", module: "clientes" },
-      { title: "Crear orden de producción", icon: PlusCircle, href: "/panel/pedidos" },
-      { title: "Ver órdenes de producción", icon: Eye, href: "/panel/ordenes_creadas" },
-      { title: "Trazabilidad de pedidos", icon: Timeline, href: "/panel/trazabilidad-pedidos" },
-    ],
-  },
-  {
-    title: "Compras",
-    icon: ShoppingCart,
-    items: [
-      { title: "Crear órdenes de compra", icon: PlusCircle, href: "/panel/compras2" },
-      { title: "Ver órdenes de compra", icon: Eye, href: "/panel/gestion-compras2" },
-    ],
-  },
-  {
-    title: "Etiquetas",
-    icon: Tag,
-    items: [
-      { title: "Lista etiquetas", icon: Tags, href: "/panel/inventario-etiquetas", module: "inventarioEtiquetas" },
-      { title: "Crear orden compra etiquetas", icon: FileText, href: "/panel/compra-etiqueta" },
-    ],
-  },
-];
-
-const currentPageHref = "/panel/trazabilidad-pedidos";
-
-const procesos = [
-  { key: "materias_primas", titulo: "Materias primas", rol: "investigación" },
-  { key: "etiquetas", titulo: "Etiquetas", rol: "etiquetas" },
-  { key: "envase", titulo: "Envase", rol: "bodega" },
-  { key: "cucharas", titulo: "Cucharas", rol: "bodega" },
-  { key: "termo_sello", titulo: "Termo / sello", rol: "bodega" },
-  { key: "tapas", titulo: "Tapas", rol: "bodega" },
-  { key: "liner", titulo: "Liner", rol: "bodega" },
-  { key: "orden_premezcla", titulo: "Orden premezcla", rol: "producción" },
-  { key: "verificacion_pre", titulo: "Verificación pre", rol: "investigación" },
-  { key: "pre_mezcla", titulo: "Pre mezcla", rol: "investigación" },
-  { key: "orden_mezcla", titulo: "Orden mezcla", rol: "producción" },
-  { key: "verificacion_mez", titulo: "Verificación mez", rol: "investigación" },
-  { key: "mezcla", titulo: "Mezcla", rol: "investigación" },
-  { key: "orden_acondicionamiento", titulo: "Orden acondicionamiento", rol: "producción" },
-  { key: "envasado", titulo: "Envasado", rol: "planta" },
-  { key: "acondicionado", titulo: "Acondicionado", rol: "planta" },
-  { key: "batch_record", titulo: "Batch record", rol: "planta" },
-  { key: "almacenado", titulo: "Almacenado", rol: "bodega" },
-  { key: "remisionado", titulo: "Remisionado", rol: "bodega" },
-  { key: "facturado", titulo: "Facturado", rol: "contabilidad" },
-  { key: "entregado", titulo: "Entregado", rol: "bodega" },
-];
-
-function crearProcesosIniciales() {
-  return procesos.reduce((acc, proceso) => {
-    acc[proceso.key] = "sin_verificar";
-    return acc;
-  }, {} as Record<string, EstadoProceso>);
+const normal = (v:unknown) => String(v ?? "").trim();
+const fechaISO = (v:unknown) => { const t=normal(v); if(!t)return ""; const d=new Date(t); return Number.isNaN(d.getTime()) ? t : d.toISOString(); };
+const fechaVista = (v:string) => { if(!v)return "Sin fecha"; const d=new Date(v); return Number.isNaN(d.getTime())?v:new Intl.DateTimeFormat("es-CO",{day:"2-digit",month:"short",year:"numeric"}).format(d); };
+const lista = (v:any):any[] => Array.isArray(v)?v:Object.values(v || {});
+const textoCliente = (v:any) => typeof v==="string"?v:normal(v?.nombre || v?.cliente || v?.razonSocial || v?.codigo_cliente);
+const num = (v:unknown) => Number(v)||0;
+function estadosGestion(g:any):Paso[] {
+  const pasos:Paso[]=[];
+  if(g?.facturaCompra?.fecha)pasos.push({titulo:"Factura adjuntada",fecha:fechaISO(g.facturaCompra.fecha),estado:"registrado",descripcion:normal(g.facturaCompra.nombre),usuario:normal(g.facturaCompra.subidoPor)});
+  Object.entries(g?.estados || {}).forEach(([item, procesos]:[string,any]) => {
+    Object.entries(procesos || {}).forEach(([nombre,registro]:[string,any]) => {
+      const meta=registro?.meta;
+      if(!meta?.fecha)return;
+      pasos.push({titulo:nombre.replace(/_/g," "),fecha:fechaISO(meta.fecha),estado:normal(registro.estado),descripcion:"Ítem "+item+(meta.motivo?" · "+meta.motivo:""),usuario:normal(meta.usuario || meta.email)});
+    });
+  });
+  return pasos;
 }
-
-function normalizarItem(item: Partial<PedidoItem>): PedidoItem {
-  return {
-    codigo: item.codigo || "",
-    producto: item.producto || "",
-    cantidad: item.cantidad || "",
-    consecutivo: item.consecutivo || "",
-    planta: item.planta || "",
-    procesos: { ...crearProcesosIniciales(), ...(item.procesos || {}) },
-    estadosMeta: item.estadosMeta || {},
-    historialEstados: item.historialEstados || {},
+function construir(datos:Record<string,any>):Evento[] {
+  const salida:Evento[]=[];
+  const add=(fuente:Fuente,id:string,v:any,gestion?:any)=>{
+    const refOrden=normal(v?.ordenPedido || v?.ordenCompra || v?.consecutivo || v?.numeroOrden || v?.orden || v?.codigo || id);
+    const items=lista(v?.items || v?.itemsCompra || v?.productos || v?.detalle || v?.itemsPedido);
+    const estado=normal(v?.estadoGeneral || v?.estado || v?.estadoCalculado || "Registrado");
+    const creado=fechaISO(v?.creadoAt || v?.createdAt || v?.fecha || v?.fechaCreacion || v?.actualizadoAt);
+    const pasos:Paso[]=[{titulo:"Registro creado",fecha:creado,estado:"registrado",descripcion:refOrden,usuario:normal(v?.creadoPor || v?.creadoPorEmail)}];
+    if(fuente==="pedido"){
+      items.forEach((it:any,index:number)=>{
+        Object.entries(it?.estadosMeta || {}).forEach(([nombre,meta]:[string,any])=>{if(meta?.fecha)pasos.push({titulo:nombre.replace(/_/g," "),fecha:fechaISO(meta.fecha),estado:normal(meta.estado || it?.procesos?.[nombre]),descripcion:normal(it?.producto || it?.codigo || "Producto "+(index+1)),usuario:normal(meta.usuario)});});
+        Object.entries(it?.historialEstados || {}).forEach(([nombre,hist]:[string,any])=>lista(hist).forEach((meta:any)=>{if(meta?.fecha)pasos.push({titulo:nombre.replace(/_/g," "),fecha:fechaISO(meta.fecha),estado:normal(meta.estado),descripcion:normal(it?.producto || it?.codigo),usuario:normal(meta.usuario)});}));
+      });
+    }
+    if(gestion)pasos.push(...estadosGestion(gestion));
+    if(v?.actualizadoAt && v.actualizadoAt!==v.creadoAt)pasos.push({titulo:"Última actualización",fecha:fechaISO(v.actualizadoAt),estado,descripcion:"Registro actualizado",usuario:normal(v?.actualizadoPor)});
+    const relaciones=[v?.ordenPedido,v?.ordenPedidoId,v?.ordenCompra,v?.pedidoId,v?.compraId,v?.referenciaOrden,v?.ordenProduccion,v?.ordenOrigen].map(normal).filter(Boolean);
+    salida.push({id:fuente+":"+id,fuente,referencia:refOrden,titulo:fuente==="pedido"?textoCliente(v?.cliente || v?.clienteNombre || v?.datosCliente) || "Orden de pedido":fuente==="programacion"?normal(v?.titulo || v?.tipo || "Actividad programada"):fuente==="traslado"?normal(v?.bodegaDestino || v?.destino || "Traslado de insumos"):normal(v?.proveedor || v?.nombreProveedor || v?.origen || "Orden de compra"),detalle:fuente==="pedido"?"Producción y seguimiento de productos":fuentes[fuente].nombre,fecha:creado,estado,responsable:normal(v?.creadoPor || v?.responsableProduccion || v?.usuario || v?.creadoPorEmail || "Sin responsable"),url:fuentes[fuente].url,items:items.length,cantidad:items.reduce((n:number,it:any)=>n+num(it?.cantidadComprar ?? it?.totalUnidades ?? it?.cantidad ?? it?.total),0),relaciones,pasos:pasos.filter(p=>p.fecha).sort((a,b)=>a.fecha.localeCompare(b.fecha))});
   };
+  Object.entries(datos.ORDENES_PEDIDO || {}).forEach(([id,v])=>add("pedido",id,v));
+  Object.entries(datos.COMPRAS_BODEGA || {}).forEach(([id,v])=>add("compra",id,v,datos.GESTION_COMPRAS_BODEGA?.[id]));
+  Object.entries(datos.COMPRAS_ETIQUETAS || {}).forEach(([id,v])=>add("compra_etiquetas",id,v,datos.GESTION_COMPRAS_ETIQUETAS?.[id]));
+  Object.entries(datos.PRODUCCION_PROGRAMACION || {}).forEach(([id,v])=>add("programacion",id,v));
+  Object.entries(datos.TRASLADOS_BODEGAS || {}).forEach(([id,v])=>add("traslado",id,v));
+  return salida.sort((a,b)=>b.fecha.localeCompare(a.fecha));
 }
-
-function formatoFechaHora(value?: string) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
-
-function toNumber(value: unknown) {
-  if (value === undefined || value === null || value === "") return 0;
-  const parsed = Number(String(value).replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function formatNumber(value: unknown) {
-  return new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 }).format(toNumber(value));
-}
-
-function mostrarEstado(estado?: EstadoProceso) {
-  if (estado === "aceptado") return "Aceptado";
-  if (estado === "rechazado") return "Rechazado";
-  return "Sin verificar";
-}
-
-function estadoBadgeClass(estado?: EstadoProceso) {
-  if (estado === "aceptado") return "bg-green-100 text-green-700 border-green-200";
-  if (estado === "rechazado") return "bg-red-100 text-red-700 border-red-200";
-  return "bg-slate-100 text-slate-600 border-slate-200";
-}
-
-function calcularEstadoOrden(pedido: PedidoGuardado) {
-  const items = pedido.items || [];
-  if (items.length === 0) return "creada";
-
-  const estados: EstadoProceso[] = [];
-  items.forEach((item) => procesos.forEach((proceso) => estados.push(item.procesos?.[proceso.key] || "sin_verificar")));
-
-  if (estados.some((estado) => estado === "rechazado")) return "con_rechazos";
-  if (estados.length > 0 && estados.every((estado) => estado === "aceptado")) return "completada";
-  if (estados.every((estado) => estado === "sin_verificar")) return "creada";
-  return "incompleta";
-}
-
-function mostrarEstadoOrden(estado: string) {
-  if (estado === "con_rechazos") return "Con rechazos";
-  if (estado === "incompleta") return "Incompleta";
-  if (estado === "completada") return "Completada";
-  return "Creada";
-}
-
-function estadoOrdenClass(estado: string) {
-  if (estado === "con_rechazos") return "bg-red-100 text-red-700 border-red-200";
-  if (estado === "incompleta") return "bg-yellow-100 text-yellow-800 border-yellow-200";
-  if (estado === "completada") return "bg-green-100 text-green-700 border-green-200";
-  return "bg-[#244C5A]/10 text-[#244C5A] border-[#244C5A]/10";
-}
-
-function recolectarTimeline(pedido: PedidoGuardado) {
-  const eventos: Array<{ fecha: string; titulo: string; descripcion: string; estado?: EstadoProceso; usuario?: string; rol?: string; motivo?: string }> = [];
-
-  if (pedido.creadoAt) {
-    eventos.push({ fecha: pedido.creadoAt, titulo: "Orden creada", descripcion: pedido.ordenPedido || "Orden", usuario: pedido.creadoPor || pedido.creadoPorEmail || "Usuario" });
-  }
-
-  (pedido.items || []).forEach((item) => {
-    procesos.forEach((proceso) => {
-      const historial = item.historialEstados?.[proceso.key] || [];
-      historial.forEach((registro) => {
-        if (!registro?.fecha || registro.estado === "sin_verificar") return;
-        eventos.push({
-          fecha: registro.fecha,
-          titulo: `${proceso.titulo} · ${mostrarEstado(registro.estado)}`,
-          descripcion: `${item.codigo || ""} ${item.producto || ""}`.trim(),
-          estado: registro.estado,
-          usuario: registro.usuario || registro.email || "Usuario",
-          rol: registro.rol,
-          motivo: registro.motivo,
-        });
-      });
-    });
-  });
-
-  if (pedido.actualizadoAt && pedido.actualizadoAt !== pedido.creadoAt) {
-    eventos.push({ fecha: pedido.actualizadoAt, titulo: "Última actualización", descripcion: "Estados o datos de la orden actualizados", usuario: pedido.actualizadoPor || pedido.actualizadoPorEmail || "Usuario" });
-  }
-
-  return eventos.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-}
-
-function recolectarReservas(proveedoresData: any, pedido: PedidoGuardado): ReservaInsumo[] {
-  const reservas: ReservaInsumo[] = [];
-  const orden = String(pedido.ordenPedido || "");
-  const pedidoId = String(pedido.id || "");
-
-  Object.entries(proveedoresData || {}).forEach(([codigoProveedor, proveedorNode]: any) => {
-    Object.entries(proveedorNode || {}).forEach(([nombreProveedor, proveedorInfo]: any) => {
-      Object.entries(proveedorInfo?.PRODUCTOS || {}).forEach(([codigoProductoProveedor, productoInfo]: any) => {
-        Object.entries(productoInfo?.RESERVADO_PEDIDOS || {}).forEach(([reservaKey, reserva]: any) => {
-          const coincideOrden = String(reserva?.ordenPedido || "") === orden;
-          const coincideId = pedidoId && String(reserva?.ordenPedidoId || "") === pedidoId;
-          if (!coincideOrden && !coincideId) return;
-
-          reservas.push({
-            key: reservaKey,
-            path: `PROVEEDORES/${codigoProveedor}/${nombreProveedor}/PRODUCTOS/${codigoProductoProveedor}/RESERVADO_PEDIDOS/${reservaKey}`,
-            proveedor: reserva?.proveedor || nombreProveedor,
-            proveedorCodigo: codigoProveedor,
-            productoProveedor: productoInfo?.DATOS_PRODUCTO?.PRODUCTO || reserva?.descripcionInsumo || codigoProductoProveedor,
-            codigoInsumo: reserva?.codigoInsumo || codigoProductoProveedor,
-            descripcionInsumo: reserva?.descripcionInsumo,
-            tipoEmpaque: reserva?.tipoEmpaque,
-            cantidad: toNumber(reserva?.cantidad),
-            movimientoKey: reserva?.movimientoKey,
-            stockReservadoAnterior: toNumber(reserva?.stockReservadoAnterior),
-            stockReservadoNuevo: toNumber(reserva?.stockReservadoNuevo),
-            stockDisponible: toNumber(reserva?.stockDisponible),
-            stockTeorico: toNumber(reserva?.stockTeorico),
-            estado: reserva?.estado,
-            createdAt: reserva?.createdAt,
-            productoPedidoCodigo: reserva?.productoPedidoCodigo,
-            productoPedido: reserva?.productoPedido,
-            ordenPedido: reserva?.ordenPedido,
-            ordenPedidoId: reserva?.ordenPedidoId,
-          });
-        });
-      });
-    });
-  });
-
-  return reservas.sort((a, b) => String(a.productoPedidoCodigo || "").localeCompare(String(b.productoPedidoCodigo || "")));
-}
-
-export default function TrazabilidadPedidosPage() {
-  const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ "Pedidos y Producción": true });
-  const { authUser, profile, loading: loadingPermissions, canView } = useUserPermissions();
-
-  const [pedidos, setPedidos] = useState<PedidoGuardado[]>([]);
-  const [reservas, setReservas] = useState<ReservaInsumo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busqueda, setBusqueda] = useState("");
-  const [pedidoSeleccionadoId, setPedidoSeleccionadoId] = useState("");
-
-  const userName = useMemo(() => profile?.nombre || authUser?.displayName || authUser?.email?.split("@")[0] || "Usuario", [profile, authUser]);
-
-  const filteredSidebarSections = useMemo(() => sidebarSections.map((section) => ({
-    ...section,
-    items: section.items.filter((item) => (item.module && canView ? canView(item.module as any) : true)),
-  })).filter((section) => section.items.length > 0), [canView]);
-
-  const sidebarPadding = sidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[300px]";
-
-  const pedidoSeleccionado = useMemo(() => pedidos.find((pedido) => pedido.id === pedidoSeleccionadoId) || pedidos[0] || null, [pedidos, pedidoSeleccionadoId]);
-  const estadoOrden = pedidoSeleccionado ? calcularEstadoOrden(pedidoSeleccionado) : "creada";
-  const timeline = pedidoSeleccionado ? recolectarTimeline(pedidoSeleccionado) : [];
-  const totalProcesos = (pedidoSeleccionado?.items?.length || 0) * procesos.length;
-  const aceptados = (pedidoSeleccionado?.items || []).reduce((acc, item) => acc + procesos.filter((proceso) => item.procesos?.[proceso.key] === "aceptado").length, 0);
-  const rechazados = (pedidoSeleccionado?.items || []).reduce((acc, item) => acc + procesos.filter((proceso) => item.procesos?.[proceso.key] === "rechazado").length, 0);
-  const avance = totalProcesos > 0 ? Math.round((aceptados / totalProcesos) * 100) : 0;
-
-  const pedidosFiltrados = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return pedidos.slice(0, 25);
-    return pedidos.filter((pedido) => [pedido.ordenPedido, pedido.fecha, pedido.cliente?.codigo_cliente, pedido.cliente?.nombre, pedido.creadoPor]
-      .join(" ").toLowerCase().includes(q)).slice(0, 40);
-  }, [pedidos, busqueda]);
-
-  const reservasSeleccionadas = useMemo(() => {
-    if (!pedidoSeleccionado) return [];
-    return reservas.filter((reserva) => reserva.ordenPedido === pedidoSeleccionado.ordenPedido || reserva.ordenPedidoId === pedidoSeleccionado.id);
-  }, [reservas, pedidoSeleccionado]);
-
-  const reservasPorProducto = useMemo(() => {
-    return reservasSeleccionadas.reduce((acc, reserva) => {
-      const key = String(reserva.productoPedidoCodigo || "SIN-CODIGO");
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(reserva);
-      return acc;
-    }, {} as Record<string, ReservaInsumo[]>);
-  }, [reservasSeleccionadas]);
-
-  useEffect(() => {
-    if (!loadingPermissions && !authUser) router.replace("/");
-  }, [loadingPermissions, authUser, router]);
-
-  useEffect(() => {
-    const cargar = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const [pedidosSnap, proveedoresSnap] = await Promise.all([
-          get(ref(dbRealtime, "ORDENES_PEDIDO")),
-          get(ref(dbRealtime, "PROVEEDORES")),
-        ]);
-
-        const data = pedidosSnap.exists() ? pedidosSnap.val() : {};
-        const lista = Object.entries(data || {}).map(([id, value]: any) => ({
-          id,
-          ...value,
-          items: (value?.items || []).map((item: PedidoItem) => normalizarItem(item)),
-        })) as PedidoGuardado[];
-
-        lista.sort((a, b) => new Date(b.creadoAt || b.fecha || 0).getTime() - new Date(a.creadoAt || a.fecha || 0).getTime());
-        setPedidos(lista);
-        setPedidoSeleccionadoId((actual) => actual || lista[0]?.id || "");
-
-        if (lista.length > 0) {
-          const proveedoresData = proveedoresSnap.exists() ? proveedoresSnap.val() : {};
-          const todasReservas = lista.flatMap((pedido) => recolectarReservas(proveedoresData, pedido));
-          setReservas(todasReservas);
-        } else {
-          setReservas([]);
-        }
-      } catch (err: any) {
-        setError(`No fue posible cargar la trazabilidad. ${err?.message || ""}`);
-      } finally {
-        setLoading(false);
-      }
+const nodos=["ORDENES_PEDIDO","COMPRAS_BODEGA","GESTION_COMPRAS_BODEGA","COMPRAS_ETIQUETAS","GESTION_COMPRAS_ETIQUETAS","PRODUCCION_PROGRAMACION","TRASLADOS_BODEGAS"];
+export default function TrazabilidadPage(){
+  const router=useRouter();
+  const {authUser,loading:loadingPermissions}=useUserPermissions();
+  const [datos,setDatos]=useState<Record<string,any>>({});
+  const [cargando,setCargando]=useState(false);
+  const [error,setError]=useState("");
+  const [advertencias,setAdvertencias]=useState<string[]>([]);
+  const [busqueda,setBusqueda]=useState("");
+  const [tipo,setTipo]=useState("todos");
+  const [estado,setEstado]=useState("todos");
+  const [desde,setDesde]=useState("");
+  const [hasta,setHasta]=useState("");
+  const [seleccion,setSeleccion]=useState<string|null>(null);
+  const [pagina,setPagina]=useState(1);
+  const [version,setVersion]=useState(0);
+  useEffect(()=>{if(!loadingPermissions&&!authUser)router.replace("/");},[loadingPermissions,authUser,router]);
+  useEffect(()=>{
+    if(loadingPermissions||!authUser)return;
+    let activo=true;
+    const cargar=async()=>{
+      setCargando(true);setError("");
+      const resultados=await Promise.allSettled(nodos.map(n=>get(ref(dbRealtime,n))));
+      if(!activo)return;
+      const siguiente:Record<string,any>={};const fallidos:string[]=[];
+      resultados.forEach((r,i)=>{if(r.status==="fulfilled")siguiente[nodos[i]]=r.value.val()||{};else fallidos.push(nodos[i]);});
+      setDatos(siguiente);setAdvertencias(fallidos);
+      if(fallidos.length===nodos.length)setError("No se pudieron leer las fuentes de trazabilidad. Revisa conexión y permisos de Firebase.");
+      setCargando(false);
     };
-
-    cargar();
-  }, []);
-
-  useEffect(() => {
-    if (!pedidoSeleccionadoId && pedidosFiltrados[0]?.id) setPedidoSeleccionadoId(pedidosFiltrados[0].id);
-  }, [pedidosFiltrados, pedidoSeleccionadoId]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.replace("/");
-  };
-
-  if (loadingPermissions || !authUser) {
-    return (
-      <main className="min-h-screen bg-[#244C5A] flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl px-8 py-7 shadow-2xl flex items-center gap-3 text-[#244C5A] font-semibold">
-          <Loader2 className="animate-spin" size={22} />
-          Validando acceso...
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-16 bg-white border-b border-slate-200 px-4 flex items-center justify-between">
-        <button type="button" onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-2xl bg-[#244C5A] text-white flex items-center justify-center" aria-label="Abrir menú"><Menu size={22} /></button>
-        <Image src="/logo.png" alt="Nuall" width={105} height={45} priority className="object-contain" />
-        <button type="button" onClick={handleLogout} className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center" aria-label="Cerrar sesión"><LogOut size={20} /></button>
+    void cargar();return()=>{activo=false};
+  },[authUser,loadingPermissions,version]);
+  const eventos=useMemo(()=>construir(datos),[datos]);
+  const filtrados=useMemo(()=>eventos.filter(e=>{
+    const q=busqueda.trim().toLowerCase();
+    const coincide=!q||[e.referencia,e.titulo,e.detalle,e.responsable,e.estado,...e.relaciones,...e.pasos.map(p=>p.descripcion)].join(" ").toLowerCase().includes(q);
+    return coincide&&(tipo==="todos"||e.fuente===tipo)&&(estado==="todos"||e.estado.toLowerCase().includes(estado))&&(!desde||e.fecha.slice(0,10)>=desde)&&(!hasta||e.fecha.slice(0,10)<=hasta);
+  }),[eventos,busqueda,tipo,estado,desde,hasta]);
+  useEffect(()=>setPagina(1),[busqueda,tipo,estado,desde,hasta]);
+  const actual=eventos.find(e=>e.id===seleccion);
+  const relacionados=useMemo(()=>actual?eventos.filter(e=>e.id!==actual.id&&(
+    e.relaciones.includes(actual.referencia)||actual.relaciones.includes(e.referencia)||
+    (actual.relaciones.length>0&&e.relaciones.some(r=>actual.relaciones.includes(r)))
+  )):[],[actual,eventos]);
+  const totalPaginas=Math.max(1,Math.ceil(filtrados.length/10));
+  const paginaSegura=Math.min(pagina,totalPaginas);
+  if(loadingPermissions||!authUser)return <div className="flex min-h-screen items-center justify-center text-slate-500"><Loader2 className="animate-spin" size={28}/></div>;
+  return <div className="min-h-screen bg-[#f4f7fb] text-slate-900">
+    <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex w-full max-w-[1700px] items-center justify-between gap-3 px-4 py-4 sm:px-6">
+      <div className="flex items-center gap-3"><Link href="/panel" className="rounded-xl border border-slate-200 p-2 hover:bg-slate-50" aria-label="Volver al panel"><ArrowLeft size={19}/></Link><div><p className="text-xs font-bold uppercase tracking-widest text-teal-700">NUALL · Control operativo</p><h1 className="text-xl font-black sm:text-2xl">Centro de trazabilidad</h1></div></div>
+      <button type="button" onClick={()=>setVersion(v=>v+1)} disabled={cargando} className="inline-flex items-center gap-2 rounded-xl bg-[#244C5A] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><RefreshCw size={16} className={cargando?"animate-spin":""}/> Actualizar</button>
+    </div></header>
+    <main className="mx-auto w-full max-w-[1700px] space-y-5 px-4 py-5 sm:px-6">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500"><span>Consulta unificada de operaciones</span><span>·</span><span>Datos reales de Firebase</span><span>·</span><span>Solo lectura</span></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {titulo:"Registros encontrados",valor:eventos.length,icon:ClipboardList,color:"text-slate-700 bg-slate-100"},
+          {titulo:"Órdenes de pedido",valor:eventos.filter(e=>e.fuente==="pedido").length,icon:Factory,color:"text-indigo-700 bg-indigo-50"},
+          {titulo:"Compras de insumos",valor:eventos.filter(e=>e.fuente==="compra").length,icon:ShoppingCart,color:"text-sky-700 bg-sky-50"},
+          {titulo:"Compras de etiquetas",valor:eventos.filter(e=>e.fuente==="compra_etiquetas").length,icon:Tags,color:"text-amber-700 bg-amber-50"},
+        ].map(k=><div key={k.titulo} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><span className={`rounded-xl p-3 ${k.color}`}><k.icon size={22}/></span><div><p className="text-xs font-semibold text-slate-500">{k.titulo}</p><p className="text-2xl font-black">{k.valor}</p></div></div>)}
       </div>
-
-      {sidebarOpen && <button type="button" className="fixed inset-0 bg-slate-950/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Cerrar fondo menú" />}
-
-      <aside className={`fixed z-50 inset-y-0 left-0 ${sidebarCollapsed ? "lg:w-[88px]" : "lg:w-[300px]"} w-[300px] bg-[#244C5A] text-white transform transition-all duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="h-full flex flex-col">
-          <div className={`px-4 pt-6 pb-5 border-b border-white/10 flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
-            <div className="flex items-center justify-center min-h-[56px]"><Image src="/logo.png" alt="Nuall" width={sidebarCollapsed ? 48 : 145} height={70} priority className="object-contain" /></div>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setSidebarCollapsed((v) => !v)} className="hidden lg:flex w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/15 items-center justify-center" aria-label="Encoger o ampliar menú">{sidebarCollapsed ? <PanelLeftOpen size={21} /> : <PanelLeftClose size={21} />}</button>
-              <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center" aria-label="Cerrar menú"><X size={21} /></button>
-            </div>
+      {advertencias.length>0&&<div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">No se pudieron consultar algunas fuentes: {advertencias.join(", ")}. Los resultados pueden estar incompletos.</div>}
+      {error&&<div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-4 sm:p-5"><div className="mb-4 flex items-center gap-2"><Filter size={18} className="text-teal-700"/><h2 className="font-black">Buscar y filtrar operaciones</h2></div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_1fr_1fr_1fr_1fr]">
+            <label className="relative"><Search className="absolute left-3 top-3 text-slate-400" size={18}/><input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="Orden, cliente, producto, responsable..." className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-teal-600"/></label>
+            <select value={tipo} onChange={e=>setTipo(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"><option value="todos">Todos los módulos</option>{Object.entries(fuentes).map(([id,f])=><option key={id} value={id}>{f.nombre}</option>)}</select>
+            <select value={estado} onChange={e=>setEstado(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"><option value="todos">Todos los estados</option><option value="cread">Creada</option><option value="proceso">En proceso</option><option value="complet">Completada</option><option value="acept">Aceptada</option><option value="rechaz">Rechazada</option><option value="anulad">Anulada</option></select>
+            <label className="text-[11px] font-bold text-slate-500">Desde<input type="date" value={desde} onChange={e=>setDesde(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-2 py-2 text-sm text-slate-800"/></label>
+            <label className="text-[11px] font-bold text-slate-500">Hasta<input type="date" value={hasta} onChange={e=>setHasta(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-2 py-2 text-sm text-slate-800"/></label>
           </div>
-
-          {!sidebarCollapsed && (
-            <div className="px-6 py-5">
-              <div className="rounded-3xl bg-white/10 border border-white/10 px-4 py-3">
-                <p className="text-xs text-white/60">Sesión activa</p>
-                <p className="font-bold truncate">{userName}</p>
-              </div>
-            </div>
-          )}
-
-          <nav className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto">
-            <Link href="/panel" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-white/85 hover:bg-white/10 hover:text-white transition ${sidebarCollapsed ? "justify-center" : ""}`} title="Panel Principal"><Home size={20} />{!sidebarCollapsed && <span className="font-bold">Panel Principal</span>}</Link>
-            {filteredSidebarSections.map((section) => {
-              const SectionIcon = section.icon;
-              const isOpen = openSections[section.title];
-              return (
-                <div key={section.title} className="space-y-1">
-                  <button type="button" onClick={() => { setOpenSections((current) => ({ ...current, [section.title]: !current[section.title] })); if (sidebarCollapsed) setSidebarCollapsed(false); }} className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-white/90 hover:bg-white/10 hover:text-white transition ${sidebarCollapsed ? "justify-center" : ""}`} title={section.title}>
-                    <span className={`flex items-center gap-3 font-bold ${sidebarCollapsed ? "justify-center" : ""}`}><SectionIcon size={20} />{!sidebarCollapsed && section.title}</span>
-                    {!sidebarCollapsed && <ChevronDown size={18} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />}
-                  </button>
-                  {!sidebarCollapsed && isOpen && (
-                    <div className="ml-4 pl-3 border-l border-white/15 space-y-1">
-                      {section.items.map((item) => {
-                        const Icon = item.icon;
-                        const active = item.href === currentPageHref;
-                        return <Link key={item.title} href={item.href} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition ${active ? "bg-white text-[#244C5A] font-black" : "text-white/75 hover:bg-white/10 hover:text-white"}`}><Icon size={18} />{item.title}</Link>;
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-
-          <div className="p-4 border-t border-white/10"><button type="button" onClick={handleLogout} className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold transition ${sidebarCollapsed ? "px-0" : ""}`}><LogOut size={19} />{!sidebarCollapsed && "Cerrar sesión"}</button></div>
         </div>
-      </aside>
-
-      <section className={`${sidebarPadding} pt-16 lg:pt-0 transition-all duration-300`}>
-        <header className="bg-[#244C5A] text-white">
-          <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <button type="button" onClick={() => router.push("/panel")} className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition" aria-label="Volver al dashboard"><ArrowLeft size={22} /></button>
-              <div className="hidden sm:block bg-white/10 border border-white/15 rounded-3xl px-5 py-2.5"><Image src="/logo.png" alt="Nuall" width={115} height={56} priority /></div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-white/65">Dashboard / Pedidos / Trazabilidad</p>
-                <h1 className="text-xl sm:text-3xl font-black truncate">Trazabilidad de pedidos</h1>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-4">
-              <button type="button" onClick={() => router.push("/panel")} className="flex items-center gap-2 bg-white text-[#244C5A] hover:bg-white/90 border border-white rounded-2xl px-4 py-3 font-black transition">Home</button>
-              <div className="text-right"><p className="text-sm font-bold truncate max-w-[220px]">{userName}</p><p className="text-xs text-white/60 truncate max-w-[220px]">{authUser?.email}</p></div>
-              <button type="button" onClick={handleLogout} className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl px-4 py-3 font-semibold transition"><LogOut size={18} />Cerrar sesión</button>
-            </div>
-          </div>
-        </header>
-
-        <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-6 space-y-6">
-          {error && <div className="rounded-2xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700 flex items-center justify-between gap-3"><span>{error}</span><button type="button" onClick={() => setError("")}><X size={18} /></button></div>}
-
-          <section className="bg-white rounded-[28px] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-[#244C5A] uppercase tracking-wide">Buscar y auditar</p>
-                <h2 className="text-2xl font-black mt-1">Consulta por orden de producción</h2>
-                <p className="text-slate-500 text-sm mt-1">Busca una OP y revisa productos, procesos, responsables, rechazos, línea de tiempo e insumos reservados en bodega.</p>
-              </div>
-              <div className="relative w-full xl:max-w-xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Buscar por OP, cliente, fecha o usuario..." className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 outline-none focus:bg-white focus:border-[#244C5A] focus:ring-2 focus:ring-[#244C5A]/20" />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="p-8 flex items-center justify-center gap-3 text-slate-500 font-semibold"><Loader2 className="animate-spin" size={22} />Cargando trazabilidad...</div>
-            ) : pedidos.length === 0 ? (
-              <div className="p-10 text-center"><ClipboardList className="mx-auto text-[#244C5A]" size={44} /><h3 className="font-black mt-4">No hay órdenes creadas</h3></div>
-            ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-0">
-                <aside className="xl:col-span-4 border-b xl:border-b-0 xl:border-r border-slate-200 bg-slate-50/60 max-h-[720px] overflow-y-auto">
-                  {pedidosFiltrados.map((pedido) => {
-                    const estado = calcularEstadoOrden(pedido);
-                    const active = pedido.id === pedidoSeleccionado?.id;
-                    return (
-                      <button key={pedido.id} type="button" onClick={() => setPedidoSeleccionadoId(pedido.id)} className={`w-full text-left p-4 border-b border-slate-200 hover:bg-white transition ${active ? "bg-white ring-2 ring-inset ring-[#244C5A]/20" : ""}`}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-black text-[#244C5A] truncate">{pedido.ordenPedido}</p>
-                            <p className="text-sm text-slate-600 truncate">{pedido.cliente?.codigo_cliente} · {pedido.cliente?.nombre}</p>
-                            <p className="text-xs text-slate-400 mt-1">{pedido.fecha || "Sin fecha"}</p>
-                          </div>
-                          <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${estadoOrdenClass(estado)}`}>{mostrarEstadoOrden(estado)}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {pedidosFiltrados.length === 0 && <div className="p-8 text-center text-sm text-slate-500">No se encontraron órdenes con esa búsqueda.</div>}
-                </aside>
-
-                <div className="xl:col-span-8 p-5 sm:p-6 space-y-6">
-                  {pedidoSeleccionado && (
-                    <>
-                      <section className="rounded-[28px] border border-slate-200 overflow-hidden">
-                        <div className="bg-[#244C5A] text-white p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                          <div>
-                            <p className="text-white/65 text-sm font-bold uppercase tracking-wide">Orden seleccionada</p>
-                            <h2 className="text-3xl font-black mt-1">{pedidoSeleccionado.ordenPedido}</h2>
-                            <p className="text-white/75 mt-1">{pedidoSeleccionado.cliente?.codigo_cliente} · {pedidoSeleccionado.cliente?.nombre}</p>
-                          </div>
-                          <span className={`rounded-full border px-4 py-2 text-sm font-black bg-white ${estadoOrdenClass(estadoOrden)}`}>{mostrarEstadoOrden(estadoOrden)}</span>
-                        </div>
-
-                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-0 border-b border-slate-200">
-                          <div className="p-4 border-r border-slate-200"><p className="text-xs font-black text-slate-400 uppercase">Fecha</p><p className="font-black mt-1">{pedidoSeleccionado.fecha || "—"}</p></div>
-                          <div className="p-4 border-r border-slate-200"><p className="text-xs font-black text-slate-400 uppercase">Productos</p><p className="font-black mt-1">{pedidoSeleccionado.items?.length || 0}</p></div>
-                          <div className="p-4 border-r border-slate-200"><p className="text-xs font-black text-slate-400 uppercase">Avance</p><p className="font-black mt-1">{avance}%</p></div>
-                          <div className="p-4 border-r border-slate-200"><p className="text-xs font-black text-slate-400 uppercase">Aceptados</p><p className="font-black mt-1 text-green-700">{aceptados}</p></div>
-                          <div className="p-4"><p className="text-xs font-black text-slate-400 uppercase">Rechazos</p><p className="font-black mt-1 text-red-700">{rechazados}</p></div>
-                        </div>
-
-                        <div className="p-5">
-                          <div className="h-4 rounded-full bg-slate-100 overflow-hidden"><div className="h-full bg-[#244C5A] transition-all" style={{ width: `${avance}%` }} /></div>
-                          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4"><strong>Creada por:</strong> {pedidoSeleccionado.creadoPor || pedidoSeleccionado.creadoPorEmail || "Usuario"}<br /><span className="text-slate-500">{formatoFechaHora(pedidoSeleccionado.creadoAt)}</span></div>
-                            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4"><strong>Responsable producción:</strong> {pedidoSeleccionado.responsableProduccion || "Aún no hay responsable"}<br /><span className="text-slate-500">{pedidoSeleccionado.responsableProduccionRol || "Sin rol registrado"}</span></div>
-                          </div>
-                        </div>
-                      </section>
-
-                      <section className="bg-white rounded-[28px] border border-slate-200 overflow-hidden">
-                        <div className="p-5 border-b border-slate-200 flex items-center gap-3"><PackageCheck className="text-[#244C5A]" /><div><h3 className="font-black text-xl">Productos y procesos</h3><p className="text-sm text-slate-500">Cada producto conserva su avance por etapa.</p></div></div>
-                        <div className="divide-y divide-slate-200">
-                          {(pedidoSeleccionado.items || []).map((item, index) => {
-                            const reservasItem = reservasPorProducto[String(item.codigo || "SIN-CODIGO")] || [];
-                            return (
-                              <details key={`${item.codigo}-${index}`} className="group open:bg-slate-50/50">
-                                <summary className="cursor-pointer list-none p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                                  <div>
-                                    <p className="font-black text-slate-900">{item.codigo} · {item.producto}</p>
-                                    <p className="text-sm text-slate-500">Cantidad: {formatNumber(item.cantidad)} · Consecutivo: {item.consecutivo || "—"} · Planta: {item.planta || "Sin asignar"}</p>
-                                  </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    <span className="rounded-full bg-green-100 text-green-700 border border-green-200 px-3 py-1 text-xs font-black">{procesos.filter((p) => item.procesos?.[p.key] === "aceptado").length} aceptados</span>
-                                    <span className="rounded-full bg-red-100 text-red-700 border border-red-200 px-3 py-1 text-xs font-black">{procesos.filter((p) => item.procesos?.[p.key] === "rechazado").length} rechazos</span>
-                                    <span className="rounded-full bg-[#244C5A]/10 text-[#244C5A] border border-[#244C5A]/10 px-3 py-1 text-xs font-black">{reservasItem.length} reservas</span>
-                                  </div>
-                                </summary>
-
-                                <div className="px-5 pb-5 space-y-5">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                                    {procesos.map((proceso) => {
-                                      const estado = item.procesos?.[proceso.key] || "sin_verificar";
-                                      const meta = item.estadosMeta?.[proceso.key];
-                                      return (
-                                        <div key={proceso.key} className="rounded-2xl border border-slate-200 bg-white p-4">
-                                          <div className="flex items-start justify-between gap-2">
-                                            <div><p className="font-black text-sm">{proceso.titulo}</p><p className="text-xs text-slate-400">Rol: {proceso.rol}</p></div>
-                                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${estadoBadgeClass(estado)}`}>{mostrarEstado(estado)}</span>
-                                          </div>
-                                          {meta?.fecha && <p className="text-xs text-slate-500 mt-3">{meta.usuario || meta.email || "Usuario"}<br />{formatoFechaHora(meta.fecha)}</p>}
-                                          {meta?.motivo && <p className="mt-2 rounded-xl bg-red-50 text-red-700 border border-red-100 px-3 py-2 text-xs"><strong>Motivo:</strong> {meta.motivo}</p>}
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-
-                                  <div className="rounded-3xl border border-[#244C5A]/15 bg-[#244C5A]/5 overflow-hidden">
-                                    <div className="p-4 border-b border-[#244C5A]/10 flex items-center gap-2 text-[#244C5A]"><PackageSearch size={19} /><h4 className="font-black">Insumos reservados en proveedores-bodega</h4></div>
-                                    {reservasItem.length === 0 ? (
-                                      <div className="p-4 text-sm text-slate-500">No se encontraron reservas vinculadas a este producto en PROVEEDORES/RESERVADO_PEDIDOS.</div>
-                                    ) : (
-                                      <div className="overflow-x-auto">
-                                        <table className="w-full min-w-[860px] text-sm">
-                                          <thead><tr className="bg-white/70 text-slate-500 text-xs uppercase"><th className="text-left px-4 py-3">Insumo</th><th className="text-left px-4 py-3">Proveedor</th><th className="text-right px-4 py-3">Reservado</th><th className="text-right px-4 py-3">Disponible</th><th className="text-right px-4 py-3">Teórico</th><th className="text-left px-4 py-3">Movimiento</th></tr></thead>
-                                          <tbody>{reservasItem.map((reserva) => <tr key={reserva.key} className="border-t border-[#244C5A]/10"><td className="px-4 py-3"><strong>{reserva.codigoInsumo}</strong><br /><span className="text-slate-500">{reserva.descripcionInsumo || reserva.productoProveedor}</span></td><td className="px-4 py-3">{reserva.proveedor}</td><td className="px-4 py-3 text-right font-black">{formatNumber(reserva.cantidad)}</td><td className="px-4 py-3 text-right">{formatNumber(reserva.stockDisponible)}</td><td className="px-4 py-3 text-right">{formatNumber(reserva.stockTeorico)}</td><td className="px-4 py-3"><strong>{reserva.movimientoKey || "—"}</strong><br /><span className="text-xs text-slate-500">{formatoFechaHora(reserva.createdAt)}</span></td></tr>)}</tbody>
-                                        </table>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </details>
-                            );
-                          })}
-                        </div>
-                      </section>
-
-                      <section className="bg-white rounded-[28px] border border-slate-200 overflow-hidden">
-                        <div className="p-5 border-b border-slate-200 flex items-center gap-3"><Clock3 className="text-[#244C5A]" /><div><h3 className="font-black text-xl">Línea de tiempo</h3><p className="text-sm text-slate-500">Registro cronológico de creación, actualizaciones y cambios de estados.</p></div></div>
-                        <div className="p-5 space-y-4">
-                          {timeline.length === 0 ? <p className="text-sm text-slate-500">Aún no hay eventos para mostrar.</p> : timeline.map((evento, index) => (
-                            <div key={`${evento.fecha}-${index}`} className="flex gap-4">
-                              <div className="flex flex-col items-center"><div className={`w-10 h-10 rounded-full flex items-center justify-center border ${evento.estado === "rechazado" ? "bg-red-50 text-red-700 border-red-200" : evento.estado === "aceptado" ? "bg-green-50 text-green-700 border-green-200" : "bg-[#244C5A]/10 text-[#244C5A] border-[#244C5A]/10"}`}>{evento.estado === "rechazado" ? <XCircle size={20} /> : evento.estado === "aceptado" ? <CheckCircle2 size={20} /> : <Clock3 size={20} />}</div>{index < timeline.length - 1 && <div className="w-px flex-1 bg-slate-200" />}</div>
-                              <div className="pb-5 min-w-0"><p className="font-black">{evento.titulo}</p><p className="text-sm text-slate-600">{evento.descripcion}</p><p className="text-xs text-slate-400 mt-1">{formatoFechaHora(evento.fecha)} · {evento.usuario}{evento.rol ? ` · ${evento.rol}` : ""}</p>{evento.motivo && <p className="mt-2 rounded-xl bg-red-50 text-red-700 border border-red-100 px-3 py-2 text-sm"><strong>Motivo:</strong> {evento.motivo}</p>}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </section>
-        </section>
+        <div className="hidden overflow-x-auto lg:block"><table className="w-full table-fixed text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="w-[17%] px-4 py-3">Fecha</th><th className="w-[22%] px-4 py-3">Referencia</th><th className="w-[22%] px-4 py-3">Módulo</th><th className="w-[20%] px-4 py-3">Cliente / detalle</th><th className="w-[12%] px-4 py-3">Estado</th><th className="w-[7%] px-4 py-3">Ver</th></tr></thead><tbody>{filtrados.slice((paginaSegura-1)*10,paginaSegura*10).map(e=><tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50"><td className="px-4 py-3 text-slate-600">{fechaVista(e.fecha)}</td><td className="break-words px-4 py-3 font-black">{e.referencia}</td><td className="px-4 py-3"><span className={`inline-flex rounded-lg border px-2 py-1 text-xs font-bold ${fuentes[e.fuente].clase}`}>{fuentes[e.fuente].nombre}</span></td><td className="break-words px-4 py-3 text-slate-600">{e.titulo}</td><td className="break-words px-4 py-3 font-semibold">{e.estado}</td><td className="px-4 py-3"><button type="button" onClick={()=>setSeleccion(e.id)} className="rounded-lg bg-[#244C5A] p-2 text-white" aria-label={"Ver "+e.referencia}><ChevronRight size={17}/></button></td></tr>)}</tbody></table></div>
+        <div className="divide-y divide-slate-100 lg:hidden">{filtrados.slice((paginaSegura-1)*10,paginaSegura*10).map(e=><button key={e.id} type="button" onClick={()=>setSeleccion(e.id)} className="flex w-full items-center justify-between gap-3 p-4 text-left"><div className="min-w-0"><p className="text-xs text-slate-500">{fechaVista(e.fecha)} · {fuentes[e.fuente].nombre}</p><p className="mt-1 font-black">{e.referencia}</p><p className="truncate text-sm text-slate-600">{e.titulo} · {e.estado}</p></div><ChevronRight size={19}/></button>)}</div>
+        {filtrados.length===0&&<div className="p-12 text-center text-sm text-slate-500">{cargando?"Consultando información...":"No hay operaciones para los filtros seleccionados."}</div>}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4 text-sm text-slate-500"><span>{filtrados.length} resultados · Página {paginaSegura} de {totalPaginas}</span><div className="flex gap-2"><button type="button" disabled={paginaSegura<=1} onClick={()=>setPagina(p=>p-1)} className="rounded-lg border px-3 py-2 disabled:opacity-30">Anterior</button><button type="button" disabled={paginaSegura>=totalPaginas} onClick={()=>setPagina(p=>p+1)} className="rounded-lg border px-3 py-2 disabled:opacity-30">Siguiente</button></div></div>
       </section>
+      <div className="grid gap-3 sm:grid-cols-3">{[{label:"Gestión de compras",href:"/panel/gestion-compras2",icon:ShoppingCart},{label:"Producción por planta",href:"/panel/produccionxplanta",icon:Factory},{label:"Inventario de etiquetas",href:"/panel/inventario-etiquetas",icon:Tags}].map(a=><Link key={a.href} href={a.href} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 text-sm font-bold text-[#244C5A] hover:border-teal-500"><span className="flex items-center gap-2"><a.icon size={19}/>{a.label}</span><ChevronRight size={17}/></Link>)}</div>
     </main>
-  );
+    {actual&&<div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/65 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Detalle de trazabilidad"><div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between gap-4 bg-[#244C5A] px-5 py-4 text-white"><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-widest text-emerald-200">{fuentes[actual.fuente].nombre}</p><h2 className="break-words text-xl font-black">{actual.referencia}</h2><p className="text-xs text-white/75">{actual.titulo}</p></div><button type="button" onClick={()=>setSeleccion(null)} className="rounded-lg bg-white/15 p-2" aria-label="Cerrar"><X size={21}/></button></div>
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-slate-50 p-4 sm:p-6">
+        <div className="grid gap-3 sm:grid-cols-4">{[{k:"Fecha",v:fechaVista(actual.fecha)},{k:"Estado",v:actual.estado},{k:"Responsable",v:actual.responsable},{k:"Ítems",v:String(actual.items)}].map(c=><div key={c.k} className="rounded-xl border border-slate-200 bg-white p-3"><p className="text-xs font-bold text-slate-500">{c.k}</p><p className="mt-1 break-words text-sm font-black">{c.v}</p></div>)}</div>
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"><h3 className="mb-4 flex items-center gap-2 font-black"><Timeline size={19} className="text-teal-700"/> Línea de tiempo documentada</h3><div className="space-y-0">{actual.pasos.length?actual.pasos.map((p,i)=><div key={i} className="relative border-l-2 border-teal-200 pb-5 pl-6 last:pb-0"><span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-white bg-teal-600"/><p className="text-xs font-semibold text-slate-500">{fechaVista(p.fecha)}</p><p className="font-bold">{p.titulo} <span className="ml-1 text-xs font-semibold text-teal-700">{p.estado}</span></p><p className="text-sm text-slate-600">{p.descripcion}</p>{p.usuario&&<p className="mt-1 text-xs text-slate-500">Responsable: {p.usuario}</p>}</div>):<p className="text-sm text-slate-500">Sin eventos históricos documentados.</p>}</div></section>
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"><h3 className="mb-2 font-black">Vínculos entre módulos</h3><p className="mb-3 text-xs text-slate-500">Se muestran únicamente coincidencias por referencias explícitas guardadas en Firebase. No se supone que dos órdenes estén relacionadas por tener fechas similares.</p>{relacionados.length?<div className="space-y-2">{relacionados.map(e=><button key={e.id} type="button" onClick={()=>setSeleccion(e.id)} className="flex w-full items-center justify-between rounded-xl border border-slate-200 p-3 text-left text-sm hover:bg-slate-50"><span><strong>{e.referencia}</strong> · {fuentes[e.fuente].nombre}</span><ChevronRight size={17}/></button>)}</div>:<p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-500">Esta operación todavía no tiene referencias cruzadas verificables.</p>}</section>
+      </div>
+      <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3"><button type="button" onClick={()=>setSeleccion(null)} className="rounded-xl border px-4 py-2 text-sm font-bold">Cerrar</button><Link href={actual.url} className="rounded-xl bg-[#244C5A] px-4 py-2 text-sm font-bold text-white">Abrir módulo de origen</Link></div>
+    </div></div>}
+  </div>;
 }
