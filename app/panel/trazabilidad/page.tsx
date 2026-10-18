@@ -72,6 +72,8 @@ export default function TrazabilidadPage(){
   const [error,setError]=useState("");
   const [advertencias,setAdvertencias]=useState<string[]>([]);
   const [busqueda,setBusqueda]=useState("");
+  const [loteConsulta,setLoteConsulta]=useState("");
+  const [loteBuscado,setLoteBuscado]=useState("");
   const [tipo,setTipo]=useState("todos");
   const [estado,setEstado]=useState("todos");
   const [desde,setDesde]=useState("");
@@ -96,6 +98,21 @@ export default function TrazabilidadPage(){
     void cargar();return()=>{activo=false};
   },[authUser,loadingPermissions,version]);
   const eventos=useMemo(()=>construir(datos),[datos]);
+  const coincidenciasLote=useMemo(()=>{
+    const q=loteBuscado.trim().toLowerCase();
+    if(!q)return [];
+    const registros:any[]=[];
+    const visitar=(valor:any,ruta:string,fuente:string,profundidad:number)=>{
+      if(!valor||typeof valor!=="object"||profundidad>8||registros.length>=150)return;
+      if(Array.isArray(valor)){valor.forEach((v,i)=>visitar(v,ruta+"/"+i,fuente,profundidad+1));return;}
+      const campos=Object.entries(valor);
+      const lotes=campos.filter(([k,v])=>/^(lote|numeroLote|loteProduccion|loteFabricacion|loteInsumo|batch|batchNumber|codigoLote)$/i.test(k)&&typeof v!=="object"&&normal(v).toLowerCase()===q);
+      if(lotes.length)registros.push({fuente,ruta,lote:normal(lotes[0][1]),producto:normal(valor.producto||valor.nombreProducto||valor.descripcion||valor.PRODUCTO||valor.codigo||""),orden:normal(valor.ordenPedido||valor.ordenProduccion||valor.ordenCompra||valor.consecutivo||""),fecha:normal(valor.fecha||valor.creadoAt||valor.createdAt||""),cantidad:normal(valor.cantidad||valor.cantidadProducida||valor.total||""),datos:campos.filter(([k,v])=>typeof v!=="object"&&/lote|fecha|orden|producto|cantidad|proveedor|cliente|estado|planta|vencimiento/i.test(k)).slice(0,16).map(([k,v])=>({campo:k,valor:normal(v)}))});
+      campos.forEach(([k,v])=>{if(v&&typeof v==="object")visitar(v,ruta+"/"+k,fuente,profundidad+1)});
+    };
+    ["ORDENES_PEDIDO","COMPRAS_BODEGA","COMPRAS_ETIQUETAS","TRASLADOS_BODEGAS"].forEach(f=>visitar(datos[f],f,f,0));
+    return registros;
+  },[datos,loteBuscado]);
   const filtrados=useMemo(()=>eventos.filter(e=>{
     const q=busqueda.trim().toLowerCase();
     const coincide=!q||[e.referencia,e.titulo,e.detalle,e.responsable,e.estado,...e.relaciones,...e.pasos.map(p=>p.descripcion)].join(" ").toLowerCase().includes(q);
@@ -117,6 +134,14 @@ export default function TrazabilidadPage(){
     </div></header>
     <main className="mx-auto w-full max-w-[1700px] space-y-5 px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500"><span>Consulta unificada de operaciones</span><span>·</span><span>Datos reales de Firebase</span><span>·</span><span>Solo lectura</span></div>
+      <section className="overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#244C5A] px-5 py-4 text-white"><div><p className="text-xs font-bold uppercase tracking-widest text-emerald-200">Prioridad sanitaria · INVIMA</p><h2 className="mt-1 text-xl font-black">Trazabilidad y retiro por lote</h2><p className="mt-1 text-sm text-white/75">Identifica registros asociados a un lote de fabricación o de insumo.</p></div><span className="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold">Consulta documental</span></div>
+        <form onSubmit={e=>{e.preventDefault();setLoteBuscado(loteConsulta.trim())}} className="flex flex-col gap-3 p-4 sm:flex-row sm:p-5"><label className="flex-1"><span className="mb-1 block text-xs font-bold text-slate-600">Número de lote</span><input value={loteConsulta} onChange={e=>setLoteConsulta(e.target.value)} placeholder="Ej. LOTE-2026-001" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-teal-600"/></label><button type="submit" className="self-end rounded-xl bg-[#244C5A] px-6 py-3 text-sm font-black text-white">Consultar lote</button></form>
+        {loteBuscado&&<div className="border-t border-slate-100 p-4 sm:p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h3 className="font-black">Lote: {loteBuscado} · {coincidenciasLote.length} coincidencia(s)</h3><button type="button" onClick={()=>{setLoteBuscado("");setLoteConsulta("")}} className="text-xs font-bold text-slate-500 underline">Limpiar consulta</button></div>
+          {coincidenciasLote.length?<div className="grid gap-3 lg:grid-cols-2">{coincidenciasLote.map((m,i)=><div key={m.ruta+i} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-bold text-teal-700">{m.fuente}</p><h4 className="mt-1 break-words font-black">{m.producto||m.orden||"Registro de lote"}</h4><p className="mt-1 break-all text-xs text-slate-500">{m.ruta}</p><div className="mt-3 grid grid-cols-2 gap-2">{m.datos.map((d:any)=><div key={d.campo} className="min-w-0"><p className="text-[11px] font-semibold text-slate-500">{d.campo}</p><p className="break-words text-sm font-bold">{d.valor||"—"}</p></div>)}</div></div>)}</div>:<p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">No se encontraron registros con este lote en las fuentes consultadas. Esto no demuestra que el lote no exista: puede estar almacenado en otro módulo o sin identificación de lote.</p>}
+          <p className="mt-4 text-xs text-slate-500">Vista exploratoria: muestra coincidencias exactas de campos de lote existentes. Aún no certifica consumo de insumos, cantidades despachadas, clientes afectados ni retiro efectivo. No debe usarse como único soporte para una decisión sanitaria.</p>
+        </div>}
+      </section>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {titulo:"Registros encontrados",valor:eventos.length,icon:ClipboardList,color:"text-slate-700 bg-slate-100"},
