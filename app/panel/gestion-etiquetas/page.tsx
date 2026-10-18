@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { get, onValue, ref, runTransaction, set, update } from "firebase/database";
+import { get, onValue, ref, set, update } from "firebase/database";
 import {
   getDownloadURL,
   getStorage,
@@ -628,36 +628,31 @@ export default function GestionComprasEtiquetasPage() {
           const item = lista[entrada.index];
           const productoRef = ref(dbRealtime, `ETIQUETAS/CLIENTES/${entrada.clienteId}/productos/${entrada.productoId}`);
           const movimientoId = `compra_${compra.id.replace(/[^a-zA-Z0-9_-]/g, "_")}_${entrada.index}`;
-          const resultado = await runTransaction(productoRef, (actual:any) => {
-            if (!actual) return;
-            const movimientos = actual.detalle?.[entrada.lado]?.movimientos || {};
-            if (movimientos[movimientoId]) return actual;
-            const stockActual = Number(actual.stock?.[entrada.lado] ?? 0) || 0;
-            const nuevoSaldo = stockActual + entrada.cantidad;
-            return {
-              ...actual,
-              stock: { ...(typeof actual.stock === "object" && actual.stock ? actual.stock : {}), [entrada.lado]: nuevoSaldo },
-              detalle: {
-                ...(actual.detalle || {}),
-                [entrada.lado]: {
-                  ...(actual.detalle?.[entrada.lado] || {}),
-                  movimientos: {
-                    ...movimientos,
-                    [movimientoId]: {
-                      fecha: new Date().toISOString().slice(0,10),
-                      operacion: `COMPRA · ${compra.consecutivo || compra.id}`,
-                      descripcion: `COMPRA · ${compra.consecutivo || compra.id}`,
-                      ingreso: entrada.cantidad,
-                      salida: null,
-                      saldo: nuevoSaldo,
-                      createdAt: Date.now(),
-                    },
-                  },
-                },
-              },
-            };
-          }, {applyLocally:false});
-          if (!resultado.snapshot.exists()) throw new Error(`No fue posible registrar el ingreso de ${item.codigoProducto}: producto inexistente.`);
+          // Misma estructura y permisos de escritura usados por Inventario de Etiquetas:
+          // movimientos por lado + actualización del stock por lado.
+          const movimientoRef = ref(dbRealtime, `ETIQUETAS/CLIENTES/${entrada.clienteId}/productos/${entrada.productoId}/detalle/${entrada.lado}/movimientos/${movimientoId}`);
+          const existente = await get(movimientoRef);
+          if (existente.exists()) continue; // No volver a sumar un ingreso ya registrado.
+
+          const productoSnapshot = await get(productoRef);
+          if (!productoSnapshot.exists()) {
+            throw new Error(`No se encontró el producto ${item.codigoProducto} en el inventario de etiquetas.`);
+          }
+          const productoActual = productoSnapshot.val();
+          const stockActual = Number(productoActual?.stock?.[entrada.lado] ?? 0) || 0;
+          const nuevoSaldo = stockActual + entrada.cantidad;
+          await set(movimientoRef, {
+            fecha: new Date().toISOString().slice(0, 10),
+            operacion: `COMPRA · ${compra.consecutivo || compra.id}`,
+            descripcion: `COMPRA · ${compra.consecutivo || compra.id}`,
+            ingreso: entrada.cantidad,
+            salida: null,
+            saldo: nuevoSaldo,
+            createdAt: Date.now(),
+          });
+          await update(ref(dbRealtime, `ETIQUETAS/CLIENTES/${entrada.clienteId}/productos/${entrada.productoId}/stock`), {
+            [entrada.lado]: nuevoSaldo,
+          });
         }
         await update(ref(dbRealtime, `COMPRAS_ETIQUETAS/${compra.id}`), {
           estado: "completado",
